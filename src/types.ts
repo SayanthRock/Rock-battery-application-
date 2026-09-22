@@ -51,6 +51,7 @@ export interface AppPreferences {
   backgroundMonitoring: boolean; // active evaluation while tab is hidden/minimized
   soundAlert: boolean; // audible audio chime when alert fires
   hapticFeedback: boolean; // subtle tactile vibration on interactions
+  lowPowerMode: boolean; // energy-saving mode reducing polling cadence & styling UI
 }
 
 export type ActiveModal = 'none' | 'details' | 'usage' | 'charging' | 'settings' | 'github';

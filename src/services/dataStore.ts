@@ -21,6 +21,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   backgroundMonitoring: true,
   soundAlert: true,
   hapticFeedback: true,
+  lowPowerMode: false,
 };
 
 type Subscriber = (prefs: AppPreferences) => void;
@@ -57,6 +58,7 @@ class DataStoreService {
       backgroundMonitoring: typeof data.backgroundMonitoring === 'boolean' ? data.backgroundMonitoring : DEFAULT_PREFERENCES.backgroundMonitoring,
       soundAlert: typeof data.soundAlert === 'boolean' ? data.soundAlert : DEFAULT_PREFERENCES.soundAlert,
       hapticFeedback: typeof data.hapticFeedback === 'boolean' ? data.hapticFeedback : DEFAULT_PREFERENCES.hapticFeedback,
+      lowPowerMode: typeof data.lowPowerMode === 'boolean' ? data.lowPowerMode : DEFAULT_PREFERENCES.lowPowerMode,
     };
   }
 

@@ -31,7 +31,9 @@ import {
   ExternalLink,
   Copy,
   GitBranch,
-  UploadCloud
+  UploadCloud,
+  ZapOff,
+  Leaf
 } from 'lucide-react';
 import { AppPreferences, ThemeMode } from '../../types';
 import { BackgroundMonitor, BackgroundMonitorStatus } from '../../services/backgroundMonitor';
@@ -172,11 +174,101 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
           </div>
 
-          {/* Battery Refresh Behavior */}
+          {/* Low Power Mode Toggle */}
           <div>
             <label className="text-xs font-bold uppercase tracking-wider font-mono text-neutral-400 block mb-2">
-              Battery Refresh Behavior
+              Power Management
             </label>
+            <div 
+              id="card-low-power-mode"
+              className={`p-4 rounded-[22px] border transition-all ${
+                preferences.lowPowerMode
+                  ? isDark
+                    ? 'bg-[#181308]/90 border-amber-500/40 shadow-lg shadow-amber-500/5'
+                    : 'bg-amber-50/90 border-amber-300 shadow-md shadow-amber-500/5'
+                  : isDark
+                  ? 'bg-[#0d1117] border-[#30363d]'
+                  : 'bg-neutral-50 border-neutral-200'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div 
+                    className={`w-8 h-8 rounded-[12px] flex items-center justify-center transition-colors ${
+                      preferences.lowPowerMode
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : isDark ? 'bg-[#161b22] text-neutral-500' : 'bg-neutral-200 text-neutral-500'
+                    }`}
+                  >
+                    <ZapOff className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold block">Low Power Mode</span>
+                      {preferences.lowPowerMode && (
+                        <span 
+                          id="pill-low-power-saving"
+                          className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                        >
+                          ACTIVE
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-[11px] block ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                      Throttles refresh interval to 60s and visually alters the Status Banner
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  id="toggle-low-power-mode"
+                  type="button"
+                  onClick={() => {
+                    const nextVal = !preferences.lowPowerMode;
+                    onUpdatePreference('lowPowerMode', nextVal);
+                    if (nextVal) {
+                      // Automatically reduce refresh interval if it was 15s or 30s
+                      if (preferences.refreshInterval === 15 || preferences.refreshInterval === 30) {
+                        onUpdatePreference('refreshInterval', 60);
+                      }
+                    }
+                    triggerHaptic('toggle', { effectiveReducedMotion, hapticEnabled: preferences.hapticFeedback });
+                  }}
+                  className={`w-11 h-6 rounded-full transition-colors relative flex items-center p-0.5 shrink-0 ml-3 ${
+                    preferences.lowPowerMode ? 'bg-amber-500' : 'bg-neutral-700'
+                  }`}
+                  aria-label="Toggle Low Power Mode"
+                >
+                  <div 
+                    className={`w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                      preferences.lowPowerMode ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {preferences.lowPowerMode && (
+                <div className="mt-3 pt-2.5 border-t border-amber-500/20 text-[11px] font-mono text-amber-400 flex items-center gap-1.5">
+                  <Leaf className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                  <span>Energy-saving profile engaged: StatusBanner updated & polling rate throttled.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Battery Refresh Behavior */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold uppercase tracking-wider font-mono text-neutral-400 block">
+                Battery Refresh Behavior
+              </label>
+              {preferences.lowPowerMode && (
+                <span className="text-[10px] font-mono text-amber-400 flex items-center gap-1">
+                  <ZapOff className="w-2.5 h-2.5" />
+                  Throttled to 60s (Low Power Mode)
+                </span>
+              )}
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
                 { val: 'events' as const, label: 'OS Events', sub: 'Zero overhead' },

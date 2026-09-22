@@ -4,13 +4,14 @@
  */
 
 import React from 'react';
-import { Battery, Zap, CheckCircle2, History } from 'lucide-react';
+import { Battery, Zap, CheckCircle2, History, ZapOff, Leaf } from 'lucide-react';
 import { BatteryHardwareMetrics } from '../types';
 
 interface StatusBannerProps {
   metrics: BatteryHardwareMetrics;
   isDark: boolean;
   intelligentCharging?: boolean;
+  lowPowerMode?: boolean;
   onTogglePreviewCritical?: () => void;
   isPreviewCritical?: boolean;
 }
@@ -19,6 +20,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
   metrics, 
   isDark,
   intelligentCharging = false,
+  lowPowerMode = false,
   onTogglePreviewCritical,
   isPreviewCritical = false,
 }) => {
@@ -37,7 +39,11 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
       <div 
         id="rock-status-banner"
         className={`w-full rounded-[24px] p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-colors ${
-          isDark
+          lowPowerMode
+            ? isDark
+              ? 'bg-[#181308]/85 backdrop-blur-md border border-amber-500/40 text-neutral-200 shadow-[0_0_20px_rgba(245,158,11,0.07)]'
+              : 'bg-amber-50/90 backdrop-blur-md border border-amber-300 text-neutral-800 shadow-sm'
+            : isDark
             ? 'bg-[#161b22]/60 backdrop-blur-md border border-[#30363d]/60 text-neutral-200'
             : 'bg-white/70 backdrop-blur-md border border-neutral-200/80 text-neutral-800 shadow-sm'
         }`}
@@ -46,15 +52,19 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
         <div className="flex items-center gap-3">
           <div 
             className={`w-10 h-10 rounded-[16px] flex items-center justify-center shrink-0 ${
-              charging
+              lowPowerMode
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-xs shadow-amber-500/10'
+                : charging
                 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                 : isCritical
                 ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
                 : 'bg-sky-500/15 text-sky-400 border border-sky-500/30'
             }`}
           >
-            {charging ? (
-              <Zap className="w-5 h-5 fill-current animate-pulse" />
+            {lowPowerMode && !charging ? (
+              <ZapOff className="w-5 h-5 text-amber-400" />
+            ) : charging ? (
+              <Zap className="w-5 h-5 fill-current animate-pulse text-emerald-400" />
             ) : status === 'full' ? (
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             ) : (
@@ -62,7 +72,7 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
             )}
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-sm tracking-tight">
                 {charging 
                   ? isIntelligentMet
@@ -74,6 +84,15 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
                   ? 'Battery Fully Charged' 
                   : 'Running on Internal Battery'}
               </span>
+              {lowPowerMode && (
+                <span 
+                  id="badge-low-power-status"
+                  className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1"
+                >
+                  <Leaf className="w-2.5 h-2.5" />
+                  LOW POWER
+                </span>
+              )}
               {isIntelligentMet && (
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 animate-pulse">
                   80% Preserved
@@ -81,7 +100,9 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
               )}
             </div>
             <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
-              {charging
+              {lowPowerMode
+                ? 'Low Power Mode active • Polling interval throttled to conserve battery'
+                : charging
                 ? isIntelligentMet
                   ? 'Optimal lifespan target met — disconnect charger to preserve cathode longevity'
                   : intelligentCharging

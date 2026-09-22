@@ -30,13 +30,17 @@ export default function App() {
     effectiveReducedMotion,
   } = usePreferences();
 
+  const effectiveRefreshInterval = preferences.lowPowerMode
+    ? (preferences.refreshInterval === 15 || preferences.refreshInterval === 30 ? 60 : preferences.refreshInterval)
+    : preferences.refreshInterval;
+
   const {
     metrics,
     isRefreshing,
     refresh,
     tier,
   } = useBattery(
-    preferences.refreshInterval,
+    effectiveRefreshInterval,
     preferences.lowBatteryNotification,
     preferences.fullBatteryNotification,
     preferences.lowBatteryThreshold,
@@ -165,6 +169,7 @@ export default function App() {
                 metrics={metrics} 
                 isDark={isDark} 
                 intelligentCharging={preferences.intelligentCharging}
+                lowPowerMode={preferences.lowPowerMode}
                 onTogglePreviewCritical={() => setPreviewCriticalMode(!previewCriticalMode)}
                 isPreviewCritical={previewCriticalMode}
               />
