@@ -77,6 +77,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         if (perm === 'granted') {
           onUpdatePreference('lowBatteryNotification', true);
           onUpdatePreference('fullBatteryNotification', true);
+          onUpdatePreference('intelligentCharging', true);
         }
       } catch {
         // Ignored
@@ -84,7 +85,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     }
   };
 
-  const handleTestNotification = async (type: 'low' | 'full' = 'low') => {
+  const handleTestNotification = async (type: 'low' | 'full' | 'intelligent' = 'low') => {
     if ('Notification' in window && Notification.permission !== 'granted') {
       await requestNotificationPermission();
     }
@@ -360,6 +361,108 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </div>
 
             <div className="space-y-3">
+              {/* Intelligent Charging (80% Health Limit) Card */}
+              <div 
+                className={`p-4 rounded-[22px] border transition-all ${
+                  preferences.intelligentCharging
+                    ? isDark
+                      ? 'bg-[#0d1520] border-sky-500/40 shadow-lg shadow-sky-500/5'
+                      : 'bg-sky-50/80 border-sky-300 shadow-md shadow-sky-500/5'
+                    : isDark
+                    ? 'bg-[#0d1117] border-[#30363d]'
+                    : 'bg-neutral-50 border-neutral-200'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2.5">
+                    <div 
+                      className={`w-7 h-7 rounded-[10px] flex items-center justify-center transition-colors ${
+                        preferences.intelligentCharging
+                          ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30'
+                          : isDark ? 'bg-[#161b22] text-neutral-500' : 'bg-neutral-200 text-neutral-500'
+                      }`}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold tracking-tight block">
+                          Intelligent Charging
+                        </span>
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-400 border border-sky-500/25">
+                          80% Health Limit
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-neutral-400 block mt-0.5">
+                        Alert when battery reaches 80% to preserve cell longevity
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className={`font-mono text-xs font-bold px-2 py-0.5 rounded-md border ${
+                        preferences.intelligentCharging
+                          ? 'bg-sky-500/15 text-sky-400 border-sky-500/25'
+                          : 'bg-neutral-800/40 text-neutral-500 border-white/5'
+                      }`}
+                    >
+                      80%
+                    </span>
+
+                    <button
+                      id="toggle-intelligent-charging"
+                      onClick={() => {
+                        const nextVal = !preferences.intelligentCharging;
+                        onUpdatePreference('intelligentCharging', nextVal);
+                        triggerHaptic('toggle', { effectiveReducedMotion, hapticEnabled: preferences.hapticFeedback });
+                      }}
+                      className={`w-10 h-5.5 rounded-full transition-colors relative flex items-center p-0.5 ${
+                        preferences.intelligentCharging ? 'bg-sky-500' : 'bg-neutral-700'
+                      }`}
+                      aria-label="Toggle intelligent 80% charging alert"
+                    >
+                      <div 
+                        className={`w-4.5 h-4.5 rounded-full bg-white shadow-md transform transition-transform ${
+                          preferences.intelligentCharging ? 'translate-x-4.5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Electrochemical Explanation & Health Saver Spec */}
+                <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+                  <div className="flex items-start gap-2 text-[11px] text-neutral-400 leading-relaxed">
+                    <div className="w-1.5 h-1.5 rounded-full bg-sky-400 mt-1.5 shrink-0" />
+                    <p>
+                      Charging lithium-ion cells past 80% induces elevated electrochemical strain on the cathode and accelerates capacity degradation. Unplugging at 80% prolongs pack lifespan up to <strong className="text-neutral-200">2.5× to 3×</strong>.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-neutral-400">
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
+                        Optimal Lifespan: 20% - 80%
+                      </span>
+                    </div>
+
+                    <button
+                      id="btn-test-intelligent-alert"
+                      type="button"
+                      onClick={() => {
+                        triggerHaptic('alert', { effectiveReducedMotion, hapticEnabled: preferences.hapticFeedback });
+                        handleTestNotification('intelligent');
+                      }}
+                      className="px-2.5 py-1 rounded-[8px] text-[10px] font-mono font-semibold flex items-center gap-1 bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 transition-all active:scale-95"
+                    >
+                      <Sparkles className="w-2.5 h-2.5" />
+                      <span>{testSent === 'intelligent' ? 'Alert Sent!' : 'Test 80% Alert'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Low Battery Custom Threshold Card */}
               <div 
                 className={`p-4 rounded-[22px] border transition-all ${
@@ -698,7 +801,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+                  <button
+                    id="btn-test-intelligent-alert-footer"
+                    type="button"
+                    onClick={() => {
+                      triggerHaptic('alert', { effectiveReducedMotion, hapticEnabled: preferences.hapticFeedback });
+                      handleTestNotification('intelligent');
+                    }}
+                    className="px-2.5 py-1 rounded-[10px] text-[11px] font-semibold flex items-center gap-1 bg-[#21262d] hover:bg-[#30363d] border border-sky-500/30 text-sky-300 transition-all active:scale-95"
+                  >
+                    <Sparkles className="w-3 h-3 text-sky-400" />
+                    <span>{testSent === 'intelligent' ? 'Fired!' : 'Test 80% Alert'}</span>
+                  </button>
+
                   <button
                     id="btn-test-low-alert"
                     type="button"

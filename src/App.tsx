@@ -39,7 +39,8 @@ export default function App() {
     preferences.lowBatteryNotification,
     preferences.fullBatteryNotification,
     preferences.lowBatteryThreshold,
-    preferences.fullBatteryThreshold
+    preferences.fullBatteryThreshold,
+    preferences.intelligentCharging
   );
 
   const [activeModal, setActiveModal] = useState<ActiveModal>('none');
@@ -161,6 +162,7 @@ export default function App() {
               <StatusBanner 
                 metrics={metrics} 
                 isDark={isDark} 
+                intelligentCharging={preferences.intelligentCharging}
                 onTogglePreviewCritical={() => setPreviewCriticalMode(!previewCriticalMode)}
                 isPreviewCritical={previewCriticalMode}
               />

@@ -34,6 +34,7 @@ class BackgroundBatteryMonitor {
   private heartbeatTimer: number | null = null;
   private lastAlertedLowLevel: number | null = null;
   private lastAlertedFullLevel: number | null = null;
+  private lastAlertedIntelligentLevel: number | null = null;
   private statusListeners: Set<(status: BackgroundMonitorStatus) => void> = new Set();
   private alertsDispatched = 0;
   private lastCheckTime: Date | null = null;
@@ -131,6 +132,11 @@ class BackgroundBatteryMonitor {
       this.lastAlertedFullLevel = null;
     }
 
+    // Reset intelligent charging alert if battery discharged below 77% or stopped charging
+    if (level < 77 || !charging) {
+      this.lastAlertedIntelligentLevel = null;
+    }
+
     const hasNotificationPermission =
       typeof window !== 'undefined' &&
       'Notification' in window &&
@@ -144,7 +150,15 @@ class BackgroundBatteryMonitor {
       }
     }
 
-    // 2. Full battery / target saturation condition check
+    // 2. Intelligent Charging 80% health limit condition check
+    if (prefs.intelligentCharging && charging && level >= 80) {
+      if (this.lastAlertedIntelligentLevel !== 80) {
+        this.lastAlertedIntelligentLevel = 80;
+        this.dispatchIntelligentChargingAlert(level, hasNotificationPermission, prefs.soundAlert);
+      }
+    }
+
+    // 3. Full battery / target saturation condition check
     if (prefs.fullBatteryNotification && charging && level >= fullThreshold) {
       if (this.lastAlertedFullLevel !== level) {
         this.lastAlertedFullLevel = level;
@@ -153,6 +167,37 @@ class BackgroundBatteryMonitor {
     }
 
     this.notifyStatus();
+  }
+
+  private dispatchIntelligentChargingAlert(
+    level: number,
+    hasPermission: boolean,
+    soundAlert: boolean
+  ) {
+    this.alertsDispatched++;
+
+    if (soundAlert) {
+      playBatteryAlertChime('intelligent');
+    }
+
+    if (hasPermission) {
+      try {
+        const notif = new Notification(`Intelligent Charging: 80% Health Limit Reached 🔋`, {
+          body: `Battery reached ${level}%. Unplugging now significantly reduces electrochemical stress and extends long-term lithium-ion cell life.`,
+          icon: '/favicon.ico',
+          tag: 'rock-battery-intelligent-alert',
+        });
+
+        notif.onclick = () => {
+          if (typeof window !== 'undefined') {
+            window.focus();
+            notif.close();
+          }
+        };
+      } catch (e) {
+        console.error('Failed to trigger intelligent charging notification:', e);
+      }
+    }
   }
 
   private dispatchLowBatteryAlert(
@@ -262,7 +307,7 @@ class BackgroundBatteryMonitor {
     });
   }
 
-  public testAlert(type: 'low' | 'full' = 'low') {
+  public testAlert(type: 'low' | 'full' | 'intelligent' = 'low') {
     const prefs = DataStore.getPreferences();
     const hasPermission =
       typeof window !== 'undefined' &&
@@ -270,18 +315,26 @@ class BackgroundBatteryMonitor {
       Notification.permission === 'granted';
 
     if (prefs.soundAlert) {
-      playBatteryAlertChime(type === 'low' ? 'low' : 'full');
+      playBatteryAlertChime(type === 'low' ? 'low' : type === 'full' ? 'full' : 'intelligent');
     }
 
     if (hasPermission) {
       const isLow = type === 'low';
+      const isIntelligent = type === 'intelligent';
       const notif = new Notification(
-        isLow ? 'Rock Battery: Low Alert Test' : 'Rock Battery: Target Charge Test',
+        isIntelligent
+          ? 'Rock Battery: Intelligent Charging Test (80%) 🔋'
+          : isLow
+          ? 'Rock Battery: Low Alert Test'
+          : 'Rock Battery: Target Charge Test',
         {
-          body: isLow
+          body: isIntelligent
+            ? 'Intelligent 80% health alert verified: Armed to alert when charging reaches 80% to protect lithium-ion cathode integrity.'
+            : isLow
             ? `Background monitoring verified: Alert armed at ≤${prefs.lowBatteryThreshold}% (DataStore synced)`
             : `Background monitoring verified: Target charge armed at ≥${prefs.fullBatteryThreshold}% (DataStore synced)`,
           icon: '/favicon.ico',
+          tag: isIntelligent ? 'rock-battery-intelligent-test' : undefined,
         }
       );
       notif.onclick = () => {

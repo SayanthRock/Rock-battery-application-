@@ -34,7 +34,8 @@ export function useBattery(
   notifyOnLow = false,
   notifyOnFull = false,
   lowThreshold = 20,
-  fullThreshold = 100
+  fullThreshold = 100,
+  intelligentCharging = true
 ) {
   const [metrics, setMetrics] = useState<BatteryHardwareMetrics>({
     level: 100,
@@ -58,6 +59,7 @@ export function useBattery(
   const batteryRef = useRef<WebBatteryManager | null>(null);
   const lastNotifiedLowRef = useRef<number | null>(null);
   const lastNotifiedFullRef = useRef<number | null>(null);
+  const lastNotifiedIntelligentRef = useRef<number | null>(null);
 
   // Screen-on tracking using Document Visibility API
   useEffect(() => {
@@ -135,12 +137,23 @@ export function useBattery(
       // Ignore
     }
 
+    // Reset intelligent notification ref if discharged below 77% or stopped charging
+    if (level < 77 || !charging) {
+      lastNotifiedIntelligentRef.current = null;
+    }
+
     // Handle optional notification checks with custom thresholds
     if ('Notification' in window && Notification.permission === 'granted') {
       if (notifyOnLow && level <= lowThreshold && !charging && lastNotifiedLowRef.current !== level) {
         lastNotifiedLowRef.current = level;
         new Notification(`Rock Battery: Low Battery (${level}%)`, {
           body: `Battery level has dropped to or below your configured alert threshold of ${lowThreshold}%. Connect to power.`,
+          icon: '/favicon.ico',
+        });
+      } else if (intelligentCharging && level >= 80 && charging && lastNotifiedIntelligentRef.current !== 80) {
+        lastNotifiedIntelligentRef.current = 80;
+        new Notification(`Rock Battery: Intelligent Charging Limit (80%) 🔋`, {
+          body: `Battery reached 80%. Unplugging now significantly reduces electrochemical cell stress and prolongs long-term battery lifespan.`,
           icon: '/favicon.ico',
         });
       } else if (notifyOnFull && level >= fullThreshold && charging && lastNotifiedFullRef.current !== level) {
@@ -151,7 +164,7 @@ export function useBattery(
         });
       }
     }
-  }, [notifyOnLow, notifyOnFull, lowThreshold, fullThreshold]);
+  }, [notifyOnLow, notifyOnFull, lowThreshold, fullThreshold, intelligentCharging]);
 
   // Initialize and attach listeners
   useEffect(() => {

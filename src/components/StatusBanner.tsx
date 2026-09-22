@@ -10,6 +10,7 @@ import { BatteryHardwareMetrics } from '../types';
 interface StatusBannerProps {
   metrics: BatteryHardwareMetrics;
   isDark: boolean;
+  intelligentCharging?: boolean;
   onTogglePreviewCritical?: () => void;
   isPreviewCritical?: boolean;
 }
@@ -17,11 +18,13 @@ interface StatusBannerProps {
 export const StatusBanner: React.FC<StatusBannerProps> = ({ 
   metrics, 
   isDark,
+  intelligentCharging = false,
   onTogglePreviewCritical,
   isPreviewCritical = false,
 }) => {
   const { charging, status, lastUpdated, level } = metrics;
   const isCritical = level <= 20 || isPreviewCritical;
+  const isIntelligentMet = charging && intelligentCharging && level >= 80;
 
   const formattedTime = lastUpdated.toLocaleTimeString([], {
     hour: '2-digit',
@@ -62,17 +65,28 @@ export const StatusBanner: React.FC<StatusBannerProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-semibold text-sm tracking-tight">
                 {charging 
-                  ? 'Connected to Power Source' 
+                  ? isIntelligentMet
+                    ? 'Intelligent 80% Health Limit Reached'
+                    : 'Connected to Power Source' 
                   : isCritical
                   ? isPreviewCritical ? 'Simulated Critical (< 20%) Active' : 'Critical Battery State (< 20%)'
                   : status === 'full' 
                   ? 'Battery Fully Charged' 
                   : 'Running on Internal Battery'}
               </span>
+              {isIntelligentMet && (
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30 animate-pulse">
+                  80% Preserved
+                </span>
+              )}
             </div>
             <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
               {charging
-                ? 'Energy flow active into battery cells'
+                ? isIntelligentMet
+                  ? 'Optimal lifespan target met — disconnect charger to preserve cathode longevity'
+                  : intelligentCharging
+                  ? 'Energy flow active into cells • Intelligent 80% health alert armed'
+                  : 'Energy flow active into battery cells'
                 : isCritical
                 ? 'Critical threshold reached — Quick Glance tips active'
                 : 'System drawing nominal operating power'}

@@ -17,6 +17,7 @@ export const DEFAULT_PREFERENCES: AppPreferences = {
   lowBatteryThreshold: 20,
   fullBatteryNotification: false,
   fullBatteryThreshold: 100,
+  intelligentCharging: true, // 80% battery health protection alert default
   backgroundMonitoring: true,
   soundAlert: true,
   hapticFeedback: true,
@@ -52,6 +53,7 @@ class DataStoreService {
       fullBatteryThreshold: typeof data.fullBatteryThreshold === 'number' && !isNaN(data.fullBatteryThreshold)
         ? Math.max(70, Math.min(100, data.fullBatteryThreshold))
         : DEFAULT_PREFERENCES.fullBatteryThreshold,
+      intelligentCharging: typeof data.intelligentCharging === 'boolean' ? data.intelligentCharging : DEFAULT_PREFERENCES.intelligentCharging,
       backgroundMonitoring: typeof data.backgroundMonitoring === 'boolean' ? data.backgroundMonitoring : DEFAULT_PREFERENCES.backgroundMonitoring,
       soundAlert: typeof data.soundAlert === 'boolean' ? data.soundAlert : DEFAULT_PREFERENCES.soundAlert,
       hapticFeedback: typeof data.hapticFeedback === 'boolean' ? data.hapticFeedback : DEFAULT_PREFERENCES.hapticFeedback,
@@ -173,7 +175,7 @@ export const DataStore = new DataStoreService();
  * Web Audio Synthesized Notification Chimes
  * High-fidelity, soothing acoustic tones for battery alert triggers
  */
-export function playBatteryAlertChime(type: 'low' | 'full' | 'test' = 'test'): void {
+export function playBatteryAlertChime(type: 'low' | 'full' | 'intelligent' | 'test' = 'test'): void {
   if (typeof window === 'undefined') return;
 
   try {
@@ -183,7 +185,28 @@ export function playBatteryAlertChime(type: 'low' | 'full' | 'test' = 'test'): v
     const ctx = new AudioContextClass();
     const now = ctx.currentTime;
 
-    if (type === 'low') {
+    if (type === 'intelligent') {
+      // Elegant crystal health preservation triad (E5 -> G#5 -> B5)
+      const healthNotes = [659.25, 830.61, 987.77]; // E5, G#5, B5
+      healthNotes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const startTime = now + idx * 0.09;
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+
+        gain.gain.setValueAtTime(0.001, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.14, startTime + 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.32);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + 0.36);
+      });
+    } else if (type === 'low') {
       // Soft amber warning harmonic descending two-tone
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();

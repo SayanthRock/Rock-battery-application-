@@ -47,6 +47,7 @@ export interface AppPreferences {
   lowBatteryThreshold: number; // e.g. 5% to 50%, default 20%
   fullBatteryNotification: boolean;
   fullBatteryThreshold: number; // e.g. 70% to 100%, default 100%
+  intelligentCharging: boolean; // Alert when battery reaches 80% to preserve long-term battery health
   backgroundMonitoring: boolean; // active evaluation while tab is hidden/minimized
   soundAlert: boolean; // audible audio chime when alert fires
   hapticFeedback: boolean; // subtle tactile vibration on interactions

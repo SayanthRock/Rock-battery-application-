@@ -149,18 +149,18 @@ export const ChargingInfoModal: React.FC<ChargingInfoModalProps> = ({
             </div>
           </div>
 
-          {/* Charging Physics Note */}
+          {/* Charging Physics & Intelligent 80% Health Note */}
           <div 
             className={`rounded-[20px] p-4 text-xs leading-relaxed space-y-1.5 ${
               isDark ? 'bg-[#0d1117] border border-[#30363d] text-neutral-300' : 'bg-neutral-50 border border-neutral-200 text-neutral-700'
             }`}
           >
             <div className="flex items-center gap-1.5 font-semibold text-neutral-200">
-              <Layers className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span>Two-Stage Lithium Chemistry</span>
+              <Sparkles className="w-4 h-4 text-sky-400 shrink-0" />
+              <span>Two-Stage Lithium Chemistry & 80% Health Limit</span>
             </div>
             <p>
-              Lithium batteries charge in two stages: Constant Current (CC) up to ~80% where power flows fastest, followed by Constant Voltage (CV) saturation where current slows down to protect cell electrolytes.
+              Lithium cells charge via Constant Current (CC) up to ~80% with minimal stress. Beyond 80%, cells transition into high-voltage Constant Voltage (CV) saturation, causing accelerated degradation. Rock Battery's <strong>Intelligent Charging</strong> alerts you at 80% to maximize pack longevity.
             </p>
           </div>
         </div>
