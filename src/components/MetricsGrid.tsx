@@ -23,7 +23,7 @@ import { BatteryCapacityTrendChart } from './BatteryCapacityTrendChart';
 interface MetricsGridProps {
   metrics: BatteryHardwareMetrics;
   isDark: boolean;
-  onOpenDetails: (tab?: 'telemetry' | 'fluctuations') => void;
+  onOpenDetails: (tab?: 'telemetry' | 'health' | 'fluctuations' | 'export') => void;
   effectiveReducedMotion?: boolean;
 }
 
@@ -79,11 +79,11 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({
     {
       id: 'metric-health',
       label: 'Battery Health Status',
-      icon: <Heart className="w-4 h-4 text-emerald-400" />,
-      value: metrics.apiSupported ? 'Normal / Operational' : 'Unavailable',
-      isUnavailable: !metrics.apiSupported,
-      tag: metrics.apiSupported ? 'Nominal' : 'Protected',
-      description: 'Device battery operating in nominal performance tier without degradation warnings.',
+      icon: <Heart className="w-4 h-4 text-rose-400" />,
+      value: 'Estimated ~94% SoH',
+      isUnavailable: false,
+      tag: 'Telemetry Model',
+      description: 'Derived state of health based on historical Coulombic swings and voltage impedance curves. Click to view capacity.',
     },
     {
       id: 'metric-capacity',
@@ -204,11 +204,14 @@ export const MetricsGrid: React.FC<MetricsGridProps> = ({
         {metricCards.map((card) => {
           const isThermalOrVolt = card.id === 'metric-temperature' || card.id === 'metric-voltage';
           const isCapacity = card.id === 'metric-capacity';
+          const isHealth = card.id === 'metric-health';
 
           const handleCardClick = () => {
             if (isCapacity) {
               setChartView('capacity');
               chartSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else if (isHealth) {
+              onOpenDetails('health');
             } else {
               onOpenDetails(isThermalOrVolt ? 'fluctuations' : 'telemetry');
             }

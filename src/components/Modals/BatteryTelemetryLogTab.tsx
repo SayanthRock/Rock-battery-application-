@@ -29,6 +29,7 @@ interface BatteryTelemetryLogTabProps {
   isDark: boolean;
   effectiveReducedMotion?: boolean;
   hapticEnabled?: boolean;
+  onExportSuccess?: (format: 'csv' | 'json', fileName: string, count: number) => void;
 }
 
 type FilterType = 'all' | 'charging' | 'discharging' | 'peaks';
@@ -39,6 +40,7 @@ export const BatteryTelemetryLogTab: React.FC<BatteryTelemetryLogTabProps> = ({
   isDark,
   effectiveReducedMotion = false,
   hapticEnabled = true,
+  onExportSuccess,
 }) => {
   const [logs, setLogs] = useState<TelemetryLogEntry[]>(() => TelemetryLogger.getLogs());
   const [filter, setFilter] = useState<FilterType>('all');
@@ -83,9 +85,10 @@ export const BatteryTelemetryLogTab: React.FC<BatteryTelemetryLogTabProps> = ({
     const mime = type === 'csv' ? 'text/csv' : 'application/json';
     const blob = new Blob([content], { type: mime });
     const url = URL.createObjectURL(blob);
+    const fileName = `rock-battery-telemetry-log-${Date.now()}.${type}`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `rock-battery-telemetry-log-${Date.now()}.${type}`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -93,6 +96,8 @@ export const BatteryTelemetryLogTab: React.FC<BatteryTelemetryLogTabProps> = ({
 
     setCopiedExport(type);
     setTimeout(() => setCopiedExport(null), 2500);
+
+    onExportSuccess?.(type, fileName, logs.length);
   };
 
   // Filter logs

@@ -16,9 +16,16 @@ A native-grade, private battery telemetry and health companion built with React,
   - Operating Voltage & Cell Potential Curves
   - Electrochemical Cell Temperature Tracking
   - D3 24-Hour Battery Capacity Trends and State of Charge Waveforms
+- **Battery Health Estimation Engine (Current vs. Design Capacity)**:
+  - Derives State of Health (SoH %) from historical Coulombic cycle accumulation and continuous telemetry.
+  - Compares Full Charge Capacity (FCC in mAh & Wh) against OEM Factory Design Capacity.
+  - Models Equivalent Series Resistance (ESR in mΩ) and thermal stress exposure factor.
+  - Longevity projection estimating remaining useful cycles to the 80% capacity boundary.
+  - Interactive hardware capacity presets (Phone, Flagship, Compact, Tablet, Laptop, and custom spec input).
 - **Thermal & Voltage Fluctuation Log with Telemetry Exporter**:
   - Dual structured export to formatted JSON and delimited CSV for external analysis (Excel, Pandas, Jupyter).
   - Copy to clipboard and direct timestamped file downloads.
+  - Instant Toast Notification alerting users when telemetry export downloads initiate, with countdown progress indicator.
 - **Quick Glance Critical Card**: Automatically triggers below 20% to surface actionable OS-specific power conservation tips (macOS, Windows, Linux, Android, iOS).
 - **Audio & Haptic Feedback**: Tactile Web Audio synthesis and vibration feedback tuned for low-latency tactile responses.
 - **PWA & Offline Capable**: Works completely offline as a Progressive Web Application with install prompts for desktop and mobile.

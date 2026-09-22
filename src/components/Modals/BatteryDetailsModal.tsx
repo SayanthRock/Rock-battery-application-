@@ -18,19 +18,24 @@ import {
   Check,
   Copy,
   Database,
-  Sparkles
+  Sparkles,
+  Heart,
+  ChevronRight
 } from 'lucide-react';
 import { BatteryHardwareMetrics } from '../../types';
 import { BatteryTelemetryLogTab } from './BatteryTelemetryLogTab';
+import { BatteryHealthEstimationTab } from './BatteryHealthEstimationTab';
 import { triggerHaptic } from '../../services/haptics';
 import { TelemetryLogger, TelemetryLogEntry } from '../../services/telemetryLog';
+import { estimateBatteryHealth, getSavedDesignCapacity } from '../../services/batteryHealthEstimator';
+import { ToastNotification, ToastData } from '../ToastNotification';
 
 interface BatteryDetailsModalProps {
   metrics: BatteryHardwareMetrics;
   isDark: boolean;
   effectiveReducedMotion?: boolean;
   hapticEnabled?: boolean;
-  initialTab?: 'telemetry' | 'fluctuations' | 'export';
+  initialTab?: 'telemetry' | 'health' | 'fluctuations' | 'export';
   onClose: () => void;
 }
 
@@ -42,13 +47,19 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
   initialTab = 'telemetry',
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'telemetry' | 'fluctuations' | 'export'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'telemetry' | 'health' | 'fluctuations' | 'export'>(initialTab);
   const [exportedFormat, setExportedFormat] = useState<'csv' | 'json' | null>(null);
   const [copiedFormat, setCopiedFormat] = useState<'csv' | 'json' | null>(null);
   const [previewFormat, setPreviewFormat] = useState<'json' | 'csv'>('json');
+  const [toast, setToast] = useState<ToastData | null>(null);
   
   const { level, rawLevel, charging, status, chargingTime, dischargingTime, apiSupported, lastUpdated } = metrics;
   const logs = useMemo(() => TelemetryLogger.getLogs(), [activeTab]);
+
+  const healthSnapshot = useMemo(() => {
+    const savedDesign = getSavedDesignCapacity();
+    return estimateBatteryHealth(logs, savedDesign, level);
+  }, [logs, level]);
 
   const deviceContext = useMemo(() => ({
     level,
@@ -61,7 +72,7 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
     lastUpdated: lastUpdated.toISOString(),
   }), [level, rawLevel, charging, status, chargingTime, dischargingTime, apiSupported, lastUpdated]);
 
-  const handleTabChange = (tab: 'telemetry' | 'fluctuations' | 'export') => {
+  const handleTabChange = (tab: 'telemetry' | 'health' | 'fluctuations' | 'export') => {
     setActiveTab(tab);
     triggerHaptic('selection', { effectiveReducedMotion, hapticEnabled });
   };
@@ -77,8 +88,9 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
     const a = document.createElement('a');
     const dateStr = new Date().toISOString().slice(0, 10);
     const randomSuffix = Date.now().toString().slice(-4);
+    const fileName = `rock-battery-telemetry-${dateStr}-${randomSuffix}.${format}`;
     a.href = url;
-    a.download = `rock-battery-telemetry-${dateStr}-${randomSuffix}.${format}`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -88,6 +100,17 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
     setTimeout(() => {
       setExportedFormat(null);
     }, 2800);
+
+    // Trigger toast notification alerting user that telemetry export download has started
+    setToast({
+      id: `export-${Date.now()}`,
+      title: 'Download Started',
+      message: `Exporting ${logs.length} battery telemetry records formatted as ${format.toUpperCase()}.`,
+      format,
+      fileName,
+      recordCount: logs.length,
+      durationMs: 4000,
+    });
   };
 
   const handleCopy = (format: 'csv' | 'json') => {
@@ -195,33 +218,50 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex items-center gap-2 p-1 rounded-[16px] bg-[#0d1117] border border-[#30363d] mb-5">
+        <div className="flex items-center gap-1.5 sm:gap-2 p-1 rounded-[16px] bg-[#0d1117] border border-[#30363d] mb-5 overflow-x-auto no-scrollbar">
           <button
             id="tab-btn-telemetry"
             type="button"
             onClick={() => handleTabChange('telemetry')}
-            className={`flex-1 py-2 px-3 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 min-w-[100px] py-2 px-2.5 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'telemetry'
                 ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 shadow-sm'
                 : 'text-neutral-400 hover:text-white border border-transparent'
             }`}
           >
             <Cpu className="w-3.5 h-3.5" />
-            <span>Live Parameters</span>
+            <span>Live Specs</span>
+          </button>
+
+          <button
+            id="tab-btn-health"
+            type="button"
+            onClick={() => handleTabChange('health')}
+            className={`flex-1 min-w-[110px] py-2 px-2.5 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
+              activeTab === 'health'
+                ? 'bg-rose-500/15 text-rose-400 border border-rose-500/40 shadow-sm'
+                : 'text-neutral-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <Heart className="w-3.5 h-3.5 text-rose-400" />
+            <span>Battery Health</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300">
+              {healthSnapshot.healthPercent}%
+            </span>
           </button>
 
           <button
             id="tab-btn-fluctuations"
             type="button"
             onClick={() => handleTabChange('fluctuations')}
-            className={`flex-1 py-2 px-3 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 min-w-[115px] py-2 px-2.5 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'fluctuations'
                 ? 'bg-amber-500/15 text-amber-400 border border-amber-500/40 shadow-sm'
                 : 'text-neutral-400 hover:text-white border border-transparent'
             }`}
           >
             <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-            <span>Thermal & Voltage</span>
+            <span>Thermal & Volt</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300">
               History
             </span>
@@ -231,16 +271,16 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
             id="tab-btn-export"
             type="button"
             onClick={() => handleTabChange('export')}
-            className={`flex-1 py-2 px-3 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 min-w-[100px] py-2 px-2.5 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all whitespace-nowrap ${
               activeTab === 'export'
                 ? 'bg-sky-500/15 text-sky-400 border border-sky-500/40 shadow-sm'
                 : 'text-neutral-400 hover:text-white border border-transparent'
             }`}
           >
             <Download className="w-3.5 h-3.5 text-sky-400" />
-            <span>Export Data</span>
+            <span>Export</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-sky-500/20 text-sky-300">
-              JSON/CSV
+              CSV/JSON
             </span>
           </button>
         </div>
@@ -288,6 +328,88 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
               </div>
             </div>
 
+            {/* Battery Health & Capacity Estimation Section */}
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4 text-rose-400" />
+                <h4 className="text-xs font-bold uppercase tracking-wider font-mono">
+                  Battery Health & Capacity Estimation
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleTabChange('health')}
+                className="text-[11px] font-mono text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors group cursor-pointer"
+              >
+                <span>Full Health Model</span>
+                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+
+            <div 
+              className={`rounded-[20px] p-4 border space-y-3 font-mono text-xs transition-all ${
+                isDark ? 'bg-[#0d1117] border border-[#30363d]' : 'bg-neutral-50 border border-neutral-200'
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">
+                    Calculated State of Health (SoH)
+                  </span>
+                  <div className="flex items-baseline gap-2 mt-0.5">
+                    <span className="text-2xl font-bold text-emerald-400">
+                      {healthSnapshot.healthPercent}%
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-bold uppercase">
+                      {healthSnapshot.healthGrade} Condition
+                    </span>
+                  </div>
+                </div>
+
+                <div className="sm:text-right">
+                  <span className="text-[10px] text-neutral-400 uppercase tracking-wider block">
+                    Current vs. Factory Design
+                  </span>
+                  <p className="text-sm font-bold text-neutral-200 mt-0.5">
+                    {healthSnapshot.currentFullCapacityMah.toLocaleString()} <span className="text-neutral-500">/</span> {healthSnapshot.designCapacityMah.toLocaleString()} mAh
+                  </p>
+                  <span className="text-[10px] text-rose-400/90 block">
+                    -{healthSnapshot.capacityLossMah} mAh ({healthSnapshot.capacityLossPercent}% degradation)
+                  </span>
+                </div>
+              </div>
+
+              {/* Capacity Visual Progress Bar */}
+              <div className="pt-1">
+                <div className="w-full h-2.5 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700/40 p-0.5">
+                  <div 
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-700"
+                    style={{ width: `${Math.min(100, healthSnapshot.healthPercent)}%` }}
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-neutral-400 mt-1">
+                  <span>Available Charge: {healthSnapshot.currentAvailableChargeMah.toLocaleString()} mAh</span>
+                  <span>Energy: {healthSnapshot.currentEnergyWh} Wh</span>
+                </div>
+              </div>
+
+              {/* Empirical Telemetry Derivation Summary */}
+              <div className="pt-2 border-t border-white/5 grid grid-cols-2 sm:grid-cols-3 gap-2 text-[10px] text-neutral-400">
+                <div>
+                  <span className="text-neutral-500 block">Cycle Estimate:</span>
+                  <span className="text-neutral-200 font-bold">~{healthSnapshot.cycleCountEstimated} cycles</span>
+                </div>
+                <div>
+                  <span className="text-neutral-500 block">Internal ESR:</span>
+                  <span className="text-neutral-200 font-bold">~{healthSnapshot.internalResistanceMilliOhms} mΩ</span>
+                </div>
+                <div className="col-span-2 sm:col-span-1">
+                  <span className="text-neutral-500 block">Telemetry Buffer:</span>
+                  <span className="text-neutral-200 font-bold">{healthSnapshot.telemetryPointsSampled} records</span>
+                </div>
+              </div>
+            </div>
+
             {/* Platform Security & Unavailable Metric Notice */}
             <div className="flex items-center gap-2 pt-2">
               <ShieldAlert className="w-4 h-4 text-amber-400" />
@@ -332,7 +454,19 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
           </div>
         )}
 
-        {/* Tab Content 2: Persistent Temperature and Voltage Fluctuation Log */}
+        {/* Tab Content 2: Battery Health Estimation & Capacity Analysis */}
+        {activeTab === 'health' && (
+          <BatteryHealthEstimationTab
+            logs={logs}
+            currentLevel={level}
+            isCharging={charging}
+            isDark={isDark}
+            effectiveReducedMotion={effectiveReducedMotion}
+            hapticEnabled={hapticEnabled}
+          />
+        )}
+
+        {/* Tab Content 3: Persistent Temperature and Voltage Fluctuation Log */}
         {activeTab === 'fluctuations' && (
           <BatteryTelemetryLogTab
             currentLevel={level}
@@ -340,6 +474,17 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
             isDark={isDark}
             effectiveReducedMotion={effectiveReducedMotion}
             hapticEnabled={hapticEnabled}
+            onExportSuccess={(format, fileName, count) => {
+              setToast({
+                id: `export-${Date.now()}`,
+                title: 'Download Started',
+                message: `Exporting ${count} battery telemetry records formatted as ${format.toUpperCase()}.`,
+                format,
+                fileName,
+                recordCount: count,
+                durationMs: 4000,
+              });
+            }}
           />
         )}
 
@@ -644,6 +789,13 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Export Download Started Toast Notification */}
+      <ToastNotification
+        toast={toast}
+        isDark={isDark}
+        onClose={() => setToast(null)}
+      />
     </div>
   );
 };
