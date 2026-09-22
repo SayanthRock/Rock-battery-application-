@@ -1,21 +1,25 @@
 # Rock Battery 🔋
 
-A native-grade, private battery telemetry and health companion built with React, TypeScript, and Tailwind CSS. Designed around the Sayanth Rock design language, offering hardware-accurate real-time battery monitoring, continuous 24-hour activity tracking, and intelligent power conservation tips.
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-emerald.svg)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6.svg)](https://www.typescriptlang.org/)
+[![Zero Telemetry Tracking](https://img.shields.io/badge/Privacy-100%25_Local-00e676.svg)](#privacy--device-access)
 
-![Rock Battery Preview](https://raw.githubusercontent.com/sayanth/rock-battery/main/preview.png)
+A native-grade, private battery telemetry and health companion built with React, TypeScript, and Tailwind CSS. Designed around the Sayanth Rock design language, offering hardware-accurate real-time battery monitoring, continuous 24-hour activity tracking, telemetry export (JSON/CSV), and intelligent power conservation tips.
 
 ## ✨ Key Features
 
 - **Dynamic Rock Flow Progress Ring**: Visualizes active energy flow with fluid multi-layer SVG gradients and charging currents.
 - **Intelligent Charging (80% Health Limit)**: Real-time and background monitor alerting when battery reaches 80% to protect lithium-ion cathode chemistry and increase pack lifespan up to 2.5× to 3×.
-- **Hardware Telemetry**:
+- **Hardware Telemetry & D3 Visualizations**:
   - Live Battery Level (%) & Charging State
   - Operating Voltage & Cell Potential Curves
   - Electrochemical Cell Temperature Tracking
-  - Real-time Health State & Internal Resistance Modeling
-- **Thermal & Voltage Fluctuation Log**: Secondary analytics tab with real-time delta logs, sparkline waveforms, and CSV/JSON export.
+  - D3 24-Hour Battery Capacity Trends and State of Charge Waveforms
+- **Thermal & Voltage Fluctuation Log with Telemetry Exporter**:
+  - Dual structured export to formatted JSON and delimited CSV for external analysis (Excel, Pandas, Jupyter).
+  - Copy to clipboard and direct timestamped file downloads.
 - **Quick Glance Critical Card**: Automatically triggers below 20% to surface actionable OS-specific power conservation tips (macOS, Windows, Linux, Android, iOS).
-- **24-Hour Activity Waveform**: Responsive interactive D3 time-series chart showing 24-hour state of charge, charge cycles, and duration estimates.
 - **Audio & Haptic Feedback**: Tactile Web Audio synthesis and vibration feedback tuned for low-latency tactile responses.
 - **PWA & Offline Capable**: Works completely offline as a Progressive Web Application with install prompts for desktop and mobile.
 
@@ -31,7 +35,7 @@ A native-grade, private battery telemetry and health companion built with React,
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/rock-battery.git
+git clone https://github.com/sayanth/rock-battery.git
 cd rock-battery
 
 # Install dependencies

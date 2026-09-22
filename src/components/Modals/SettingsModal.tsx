@@ -27,7 +27,8 @@ import {
   VolumeX,
   Radio,
   Vibrate,
-  VibrateOff
+  VibrateOff,
+  ExternalLink
 } from 'lucide-react';
 import { AppPreferences, ThemeMode } from '../../types';
 import { BackgroundMonitor, BackgroundMonitorStatus } from '../../services/backgroundMonitor';
@@ -876,11 +877,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               }`}
             >
               <div className="flex items-center justify-between font-bold text-sm">
-                <span className="flex items-center gap-2">
-                  <Github className="w-4 h-4 text-emerald-400" />
-                  Sayanth Rock / GitHub Rock
-                </span>
-                <span className="font-mono text-xs text-emerald-400">v1.0.0 (Rock Engine v2.4)</span>
+                <a
+                  id="settings-github-repo-link"
+                  href="https://github.com/sayanth/rock-battery"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 hover:text-emerald-400 transition-colors group"
+                  title="Open GitHub Repository"
+                >
+                  <Github className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                  <span>Sayanth Rock / GitHub</span>
+                  <ExternalLink className="w-3 h-3 text-neutral-400 group-hover:text-emerald-400 transition-colors" />
+                </a>
+                <span className="font-mono text-xs text-emerald-400">v1.3.0 (Rock Engine v2.4)</span>
               </div>
               <p className="text-neutral-400 text-[11px]">
                 Built with the Liquid GitHub Luxury design language: charcoal layered surfaces, 24dp rounded corners, thin semantic borders, and zero-compromise hardware privacy.

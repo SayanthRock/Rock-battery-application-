@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Moon, Sun, Monitor, ShieldCheck, BatteryCharging } from 'lucide-react';
+import { RefreshCw, Moon, Sun, Monitor, ShieldCheck, BatteryCharging, Github } from 'lucide-react';
 import { ThemeMode } from '../types';
 
 interface HeaderProps {
@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
               Rock Battery
             </h1>
             <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-              v1.0
+              v1.3.0
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
@@ -86,6 +86,23 @@ export const Header: React.FC<HeaderProps> = ({
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span>{time || '--:--'}</span>
         </div>
+
+        {/* GitHub repository link */}
+        <a
+          id="header-github-link"
+          href="https://github.com/sayanth/rock-battery"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="View on GitHub (Sayanth Rock Battery)"
+          aria-label="View on GitHub repository"
+          className={`w-9 h-9 rounded-[14px] flex items-center justify-center transition-all active:scale-95 ${
+            isDark 
+              ? 'bg-[#161b22] hover:bg-[#21262d] border border-[#30363d]/80 text-neutral-300 hover:text-emerald-400' 
+              : 'bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 hover:text-emerald-600 shadow-sm'
+          }`}
+        >
+          <Github className="w-4 h-4" />
+        </a>
 
         {/* Theme quick toggle */}
         <button
