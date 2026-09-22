@@ -53,4 +53,4 @@ export interface AppPreferences {
   hapticFeedback: boolean; // subtle tactile vibration on interactions
 }
 
-export type ActiveModal = 'none' | 'details' | 'usage' | 'charging' | 'settings';
+export type ActiveModal = 'none' | 'details' | 'usage' | 'charging' | 'settings' | 'github';

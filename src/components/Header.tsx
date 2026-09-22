@@ -15,6 +15,7 @@ interface HeaderProps {
   isRefreshing: boolean;
   isApiSupported: boolean;
   charging: boolean;
+  onOpenGitHubModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing,
   isApiSupported,
   charging,
+  onOpenGitHubModal,
 }) => {
   const [time, setTime] = useState<string>('');
 
@@ -87,14 +89,13 @@ export const Header: React.FC<HeaderProps> = ({
           <span>{time || '--:--'}</span>
         </div>
 
-        {/* GitHub repository link */}
-        <a
-          id="header-github-link"
-          href="https://github.com/sayanth/rock-battery"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="View on GitHub (Sayanth Rock Battery)"
-          aria-label="View on GitHub repository"
+        {/* GitHub repository link / modal trigger */}
+        <button
+          id="header-github-btn"
+          type="button"
+          onClick={onOpenGitHubModal}
+          title="GitHub Repository & Sync Hub"
+          aria-label="Open GitHub Repository & Sync Hub"
           className={`w-9 h-9 rounded-[14px] flex items-center justify-center transition-all active:scale-95 ${
             isDark 
               ? 'bg-[#161b22] hover:bg-[#21262d] border border-[#30363d]/80 text-neutral-300 hover:text-emerald-400' 
@@ -102,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
         >
           <Github className="w-4 h-4" />
-        </a>
+        </button>
 
         {/* Theme quick toggle */}
         <button
