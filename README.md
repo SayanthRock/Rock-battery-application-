@@ -7,6 +7,7 @@ A native-grade, private battery telemetry and health companion built with React,
 ## ✨ Key Features
 
 - **Dynamic Rock Flow Progress Ring**: Visualizes active energy flow with fluid multi-layer SVG gradients and charging currents.
+- **Intelligent Charging (80% Health Limit)**: Real-time and background monitor alerting when battery reaches 80% to protect lithium-ion cathode chemistry and increase pack lifespan up to 2.5× to 3×.
 - **Hardware Telemetry**:
   - Live Battery Level (%) & Charging State
   - Operating Voltage & Cell Potential Curves
