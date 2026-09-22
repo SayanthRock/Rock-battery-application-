@@ -6,6 +6,7 @@
 import React from 'react';
 import { X, Zap, Layers, Sparkles, CheckCircle2 } from 'lucide-react';
 import { BatteryHardwareMetrics } from '../../types';
+import { ChargingTimeToFullCard } from './ChargingTimeToFullCard';
 
 interface ChargingInfoModalProps {
   metrics: BatteryHardwareMetrics;
@@ -80,6 +81,12 @@ export const ChargingInfoModal: React.FC<ChargingInfoModalProps> = ({
                 : 'Device drawing from internal chemical reserve.'}
             </p>
           </div>
+
+          {/* Real-Time & Historical Time to 100% Full Estimation Element */}
+          <ChargingTimeToFullCard
+            metrics={metrics}
+            isDark={isDark}
+          />
 
           {/* Rock Flow 4-Tier Animation Specs */}
           <div>

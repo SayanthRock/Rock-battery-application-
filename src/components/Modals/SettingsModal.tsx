@@ -28,7 +28,10 @@ import {
   Radio,
   Vibrate,
   VibrateOff,
-  ExternalLink
+  ExternalLink,
+  Copy,
+  GitBranch,
+  UploadCloud
 } from 'lucide-react';
 import { AppPreferences, ThemeMode } from '../../types';
 import { BackgroundMonitor, BackgroundMonitorStatus } from '../../services/backgroundMonitor';
@@ -62,6 +65,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   const [bgStatus, setBgStatus] = useState<BackgroundMonitorStatus>(() => BackgroundMonitor.getStatus());
   const [testSent, setTestSent] = useState<string | null>(null);
+  const [copiedGitCmd, setCopiedGitCmd] = useState<boolean>(false);
 
   useEffect(() => {
     const unsub = BackgroundMonitor.subscribeStatus((status) => {
@@ -897,6 +901,76 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] text-neutral-400">
                 <span>Real Hardware Telemetry: W3C Battery Status API</span>
                 <span className="font-semibold text-emerald-400">Zero Tracking</span>
+              </div>
+            </div>
+          </div>
+
+          {/* GitHub Repository Sync & Upload Guide */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold uppercase tracking-wider font-mono text-neutral-400 flex items-center gap-1.5">
+                <GitBranch className="w-3.5 h-3.5 text-sky-400" />
+                <span>GitHub Repository Upload & Sync</span>
+              </label>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                5 Commits Ready
+              </span>
+            </div>
+
+            <div 
+              className={`p-4 rounded-[22px] border space-y-3 text-xs leading-relaxed ${
+                isDark ? 'bg-[#0d1117] border-[#30363d] text-neutral-300' : 'bg-neutral-50 border-neutral-200 text-neutral-700'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-[12px] bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 mt-0.5">
+                  <UploadCloud className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="font-bold text-neutral-200">How to Push Changes to GitHub</p>
+                  <p className="text-neutral-400 text-[11px] mt-0.5">
+                    Target repo: <span className="font-mono text-sky-400">sayanth/rock-battery</span> (branch: <span className="font-mono text-emerald-400">main</span>). All bug fixes and features are committed cleanly.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                {/* Method 1: AI Studio Export UI */}
+                <div className={`p-3 rounded-[16px] border ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-neutral-200'}`}>
+                  <span className="text-[10px] font-mono text-emerald-400 uppercase font-bold block mb-1">
+                    Method 1: AI Studio One-Click
+                  </span>
+                  <p className="text-[11px] text-neutral-300 leading-snug">
+                    Open the top right AI Studio menu (three dots / gear) and select <strong className="text-white">Export to GitHub</strong> to push all commits with zero terminal setup.
+                  </p>
+                </div>
+
+                {/* Method 2: Git CLI */}
+                <div className={`p-3 rounded-[16px] border ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-neutral-200'}`}>
+                  <span className="text-[10px] font-mono text-sky-400 uppercase font-bold block mb-1">
+                    Method 2: Personal Access Token
+                  </span>
+                  <p className="text-[11px] text-neutral-300 leading-snug">
+                    Authenticate via token to push directly from any terminal or workflow:
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText('git push https://<GITHUB_TOKEN>@github.com/sayanth/rock-battery.git main');
+                      setCopiedGitCmd(true);
+                      triggerHaptic('selection', { effectiveReducedMotion, hapticEnabled: preferences.hapticFeedback });
+                      setTimeout(() => setCopiedGitCmd(false), 2500);
+                    }}
+                    className={`mt-2 w-full py-1.5 px-2.5 rounded-[10px] font-mono text-[10px] font-bold flex items-center justify-between transition-all ${
+                      copiedGitCmd
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                        : 'bg-[#0d1117] hover:bg-[#21262d] text-neutral-300 border border-[#30363d]'
+                    }`}
+                  >
+                    <span className="truncate">git push origin main</span>
+                    {copiedGitCmd ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-neutral-400" />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
