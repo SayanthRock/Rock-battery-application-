@@ -1,0 +1,6 @@
+{
+  "name": "Rock Battery",
+  "description": "Premium native battery companion with the Sayanth Rock design language, real device battery monitoring, and Rock Flow animation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
