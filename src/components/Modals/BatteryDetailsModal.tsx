@@ -3,18 +3,34 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { X, ShieldAlert, Cpu, CheckCircle2, AlertCircle, Thermometer, Layers } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { 
+  X, 
+  ShieldAlert, 
+  Cpu, 
+  CheckCircle2, 
+  AlertCircle, 
+  Thermometer, 
+  Layers,
+  Download,
+  FileText,
+  FileCode,
+  Check,
+  Copy,
+  Database,
+  Sparkles
+} from 'lucide-react';
 import { BatteryHardwareMetrics } from '../../types';
 import { BatteryTelemetryLogTab } from './BatteryTelemetryLogTab';
 import { triggerHaptic } from '../../services/haptics';
+import { TelemetryLogger, TelemetryLogEntry } from '../../services/telemetryLog';
 
 interface BatteryDetailsModalProps {
   metrics: BatteryHardwareMetrics;
   isDark: boolean;
   effectiveReducedMotion?: boolean;
   hapticEnabled?: boolean;
-  initialTab?: 'telemetry' | 'fluctuations';
+  initialTab?: 'telemetry' | 'fluctuations' | 'export';
   onClose: () => void;
 }
 
@@ -26,13 +42,88 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
   initialTab = 'telemetry',
   onClose,
 }) => {
-  const [activeTab, setActiveTab] = useState<'telemetry' | 'fluctuations'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'telemetry' | 'fluctuations' | 'export'>(initialTab);
+  const [exportedFormat, setExportedFormat] = useState<'csv' | 'json' | null>(null);
+  const [copiedFormat, setCopiedFormat] = useState<'csv' | 'json' | null>(null);
+  const [previewFormat, setPreviewFormat] = useState<'json' | 'csv'>('json');
+  
   const { level, rawLevel, charging, status, chargingTime, dischargingTime, apiSupported, lastUpdated } = metrics;
+  const logs = useMemo(() => TelemetryLogger.getLogs(), [activeTab]);
 
-  const handleTabChange = (tab: 'telemetry' | 'fluctuations') => {
+  const deviceContext = useMemo(() => ({
+    level,
+    rawLevel,
+    charging,
+    status,
+    chargingTime,
+    dischargingTime,
+    apiSupported,
+    lastUpdated: lastUpdated.toISOString(),
+  }), [level, rawLevel, charging, status, chargingTime, dischargingTime, apiSupported, lastUpdated]);
+
+  const handleTabChange = (tab: 'telemetry' | 'fluctuations' | 'export') => {
     setActiveTab(tab);
     triggerHaptic('selection', { effectiveReducedMotion, hapticEnabled });
   };
+
+  const handleExport = (format: 'csv' | 'json') => {
+    triggerHaptic('selection', { effectiveReducedMotion, hapticEnabled });
+    const content = format === 'csv' 
+      ? TelemetryLogger.exportAsCsv(deviceContext) 
+      : TelemetryLogger.exportAsJson(deviceContext);
+    const mime = format === 'csv' ? 'text/csv;charset=utf-8;' : 'application/json;charset=utf-8;';
+    const blob = new Blob([content], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const randomSuffix = Date.now().toString().slice(-4);
+    a.href = url;
+    a.download = `rock-battery-telemetry-${dateStr}-${randomSuffix}.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    setExportedFormat(format);
+    setTimeout(() => {
+      setExportedFormat(null);
+    }, 2800);
+  };
+
+  const handleCopy = (format: 'csv' | 'json') => {
+    triggerHaptic('selection', { effectiveReducedMotion, hapticEnabled });
+    const content = format === 'csv' 
+      ? TelemetryLogger.exportAsCsv(deviceContext) 
+      : TelemetryLogger.exportAsJson(deviceContext);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(content);
+    }
+    setCopiedFormat(format);
+    setTimeout(() => {
+      setCopiedFormat(null);
+    }, 2500);
+  };
+
+  // Preview snippet computations
+  const previewJsonSnippet = useMemo(() => {
+    const samplePayload = {
+      app: 'Rock Battery',
+      version: '1.3.0',
+      exportedAt: new Date().toISOString(),
+      recordCount: logs.length,
+      deviceContext,
+      sampleRecords: logs.slice(-2),
+    };
+    return JSON.stringify(samplePayload, null, 2);
+  }, [logs, deviceContext]);
+
+  const previewCsvSnippet = useMemo(() => {
+    const headers = 'Timestamp_Unix_MS,ISO_DateTime_UTC,Battery_Level_Percent,Charging_State,Cell_Temperature_Celsius,Cell_Voltage_Volts';
+    const sampleRows = logs.slice(-2).map((l) => 
+      `${l.timestamp},${new Date(l.timestamp).toISOString()},${l.level},${l.charging ? 'Charging' : 'Discharging'},${l.temperature.toFixed(1)},${l.voltage.toFixed(3)}`
+    );
+    return [headers, ...sampleRows].join('\n');
+  }, [logs]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -45,22 +136,62 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
         }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-neutral-700/20 dark:border-neutral-700/60 mb-4">
+        <div className="flex items-center justify-between pb-4 border-b border-neutral-700/20 dark:border-neutral-700/60 mb-4 gap-2">
           <div>
-            <h3 className="text-lg font-bold tracking-tight">Battery Telemetry Details</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold tracking-tight">Battery Telemetry Details</h3>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-sky-500/15 text-sky-400 border border-sky-500/25">
+                Exportable Logs
+              </span>
+            </div>
             <p className={`text-xs ${isDark ? 'text-neutral-400' : 'text-neutral-500'}`}>
               Hardware telemetry & persistent thermal-voltage historical logs
             </p>
           </div>
-          <button
-            id="close-details-modal-x"
-            onClick={onClose}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-              isDark ? 'hover:bg-neutral-800 text-neutral-400' : 'hover:bg-neutral-100 text-neutral-600'
-            }`}
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Quick Export Button in Header */}
+            <div className="hidden sm:flex items-center gap-1.5 p-1 rounded-[12px] bg-[#0d1117] border border-[#30363d]">
+              <button
+                id="header-btn-export-csv"
+                type="button"
+                onClick={() => handleExport('csv')}
+                className={`px-2 py-1 rounded-[8px] text-[10px] font-mono font-semibold flex items-center gap-1 transition-all ${
+                  exportedFormat === 'csv'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'text-neutral-300 hover:text-white hover:bg-white/5'
+                }`}
+                title="Export telemetry as CSV"
+              >
+                {exportedFormat === 'csv' ? <Check className="w-3 h-3 text-emerald-400" /> : <FileText className="w-3 h-3 text-sky-400" />}
+                <span>CSV</span>
+              </button>
+              <button
+                id="header-btn-export-json"
+                type="button"
+                onClick={() => handleExport('json')}
+                className={`px-2 py-1 rounded-[8px] text-[10px] font-mono font-semibold flex items-center gap-1 transition-all ${
+                  exportedFormat === 'json'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                    : 'text-neutral-300 hover:text-white hover:bg-white/5'
+                }`}
+                title="Export telemetry as JSON"
+              >
+                {exportedFormat === 'json' ? <Check className="w-3 h-3 text-emerald-400" /> : <FileCode className="w-3 h-3 text-emerald-400" />}
+                <span>JSON</span>
+              </button>
+            </div>
+
+            <button
+              id="close-details-modal-x"
+              onClick={onClose}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                isDark ? 'hover:bg-neutral-800 text-neutral-400' : 'hover:bg-neutral-100 text-neutral-600'
+              }`}
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -90,9 +221,26 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
             }`}
           >
             <Thermometer className="w-3.5 h-3.5 text-amber-400" />
-            <span>Thermal & Voltage Log</span>
+            <span>Thermal & Voltage</span>
             <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300">
               History
+            </span>
+          </button>
+
+          <button
+            id="tab-btn-export"
+            type="button"
+            onClick={() => handleTabChange('export')}
+            className={`flex-1 py-2 px-3 rounded-[12px] text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+              activeTab === 'export'
+                ? 'bg-sky-500/15 text-sky-400 border border-sky-500/40 shadow-sm'
+                : 'text-neutral-400 hover:text-white border border-transparent'
+            }`}
+          >
+            <Download className="w-3.5 h-3.5 text-sky-400" />
+            <span>Export Data</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-sky-500/20 text-sky-300">
+              JSON/CSV
             </span>
           </button>
         </div>
@@ -195,12 +343,302 @@ export const BatteryDetailsModal: React.FC<BatteryDetailsModalProps> = ({
           />
         )}
 
-        {/* Close Button */}
-        <div className="mt-6 flex justify-end">
+        {/* Tab Content 3: Accumulated Telemetry Data Exporter */}
+        {activeTab === 'export' && (
+          <div className="space-y-4">
+            {/* Overview Box */}
+            <div 
+              className={`rounded-[20px] p-4 space-y-2 border transition-all ${
+                isDark ? 'bg-[#0d1117] border-[#30363d]' : 'bg-neutral-50 border-neutral-200'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Database className="w-4 h-4 text-sky-400" />
+                  <span className="text-xs font-bold font-mono uppercase tracking-wider text-neutral-300">
+                    Accumulated Telemetry Buffer
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
+                  {logs.length} Data Points
+                </span>
+              </div>
+              <p className={`text-xs leading-relaxed ${isDark ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                Rock Battery continuously records state transitions, thermodynamic fluctuations, and circuit voltage dynamics. Export the accumulated dataset below as formatted JSON or comma-separated CSV for external analysis in Python, Jupyter, Pandas, Excel, or telemetry databases.
+              </p>
+            </div>
+
+            {/* Export Cards Grid (JSON and CSV) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Formatted JSON Card */}
+              <div 
+                className={`p-4 rounded-[20px] border flex flex-col justify-between transition-all ${
+                  isDark ? 'bg-[#0d1117] border-[#30363d]' : 'bg-neutral-50 border-neutral-200'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-[10px] bg-emerald-500/15 text-emerald-400 flex items-center justify-center">
+                        <FileCode className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold font-mono text-neutral-200">
+                        Formatted JSON
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-neutral-400 border border-white/10">
+                      .json
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 leading-relaxed mb-3">
+                    Structured hierarchical array containing device context, hardware capabilities, and ISO-timestamped records.
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  <button
+                    id="btn-export-pane-download-json"
+                    type="button"
+                    onClick={() => handleExport('json')}
+                    className="w-full py-2 px-3 rounded-[12px] text-xs font-mono font-semibold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
+                  >
+                    {exportedFormat === 'json' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Downloaded JSON</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download JSON ({logs.length})</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    id="btn-export-pane-copy-json"
+                    type="button"
+                    onClick={() => handleCopy('json')}
+                    className={`w-full py-1.5 px-3 rounded-[12px] text-xs font-mono border flex items-center justify-center gap-1.5 transition-all ${
+                      copiedFormat === 'json'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                        : isDark
+                        ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-neutral-300'
+                        : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
+                    }`}
+                  >
+                    {copiedFormat === 'json' ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span>Copied to Clipboard</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-neutral-400" />
+                        <span>Copy JSON Data</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Delimited CSV Card */}
+              <div 
+                className={`p-4 rounded-[20px] border flex flex-col justify-between transition-all ${
+                  isDark ? 'bg-[#0d1117] border-[#30363d]' : 'bg-neutral-50 border-neutral-200'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-[10px] bg-sky-500/15 text-sky-400 flex items-center justify-center">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <span className="text-xs font-bold font-mono text-neutral-200">
+                        Delimited CSV
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-neutral-400 border border-white/10">
+                      .csv
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-400 leading-relaxed mb-3">
+                    Tabular format with normalized headers. Directly importable into Excel, Google Sheets, R, or Pandas dataframes.
+                  </p>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-white/5">
+                  <button
+                    id="btn-export-pane-download-csv"
+                    type="button"
+                    onClick={() => handleExport('csv')}
+                    className="w-full py-2 px-3 rounded-[12px] text-xs font-mono font-semibold bg-sky-600 hover:bg-sky-500 text-white flex items-center justify-center gap-2 transition-all active:scale-95 shadow-sm"
+                  >
+                    {exportedFormat === 'csv' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Downloaded CSV</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-3.5 h-3.5" />
+                        <span>Download CSV ({logs.length})</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    id="btn-export-pane-copy-csv"
+                    type="button"
+                    onClick={() => handleCopy('csv')}
+                    className={`w-full py-1.5 px-3 rounded-[12px] text-xs font-mono border flex items-center justify-center gap-1.5 transition-all ${
+                      copiedFormat === 'csv'
+                        ? 'bg-sky-500/20 text-sky-400 border-sky-500/40'
+                        : isDark
+                        ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-neutral-300'
+                        : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-700'
+                    }`}
+                  >
+                    {copiedFormat === 'csv' ? (
+                      <>
+                        <Check className="w-3 h-3 text-sky-400" />
+                        <span>Copied to Clipboard</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-neutral-400" />
+                        <span>Copy CSV Data</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Data Preview Box */}
+            <div 
+              className={`rounded-[20px] p-3 border transition-all ${
+                isDark ? 'bg-[#0d1117] border-[#30363d]' : 'bg-neutral-50 border-neutral-200'
+              }`}
+            >
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="text-[11px] font-mono font-semibold text-neutral-300">
+                    Live Data Preview
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1 bg-[#161b22] p-0.5 rounded-[8px] border border-[#30363d]">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewFormat('json')}
+                    className={`px-2 py-0.5 rounded-[6px] text-[10px] font-mono transition-all ${
+                      previewFormat === 'json'
+                        ? 'bg-emerald-500/20 text-emerald-400 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    JSON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewFormat('csv')}
+                    className={`px-2 py-0.5 rounded-[6px] text-[10px] font-mono transition-all ${
+                      previewFormat === 'csv'
+                        ? 'bg-sky-500/20 text-sky-400 font-bold'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    CSV
+                  </button>
+                </div>
+              </div>
+
+              <pre 
+                className={`text-[10px] font-mono leading-relaxed p-2.5 rounded-[12px] max-h-36 overflow-auto border ${
+                  isDark 
+                    ? 'bg-[#161b22] border-[#21262d] text-neutral-300' 
+                    : 'bg-white border-neutral-200 text-neutral-800'
+                }`}
+              >
+                {previewFormat === 'json' 
+                  ? previewJsonSnippet
+                  : previewCsvSnippet}
+              </pre>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Footer with Telemetry Export & Close */}
+        <div className="mt-6 pt-4 border-t border-neutral-700/20 dark:border-neutral-700/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+          {/* Export Telemetry Options */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1 shrink-0">
+              <Download className="w-3.5 h-3.5 text-sky-400" />
+              <span>Export Telemetry:</span>
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                id="btn-footer-export-csv"
+                type="button"
+                onClick={() => handleExport('csv')}
+                className={`px-3 py-1.5 rounded-[12px] text-xs font-mono font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                  exportedFormat === 'csv'
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
+                    : isDark
+                    ? 'bg-[#0d1117] hover:bg-[#21262d] border-[#30363d] text-neutral-200'
+                    : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+                }`}
+                title="Download historical battery logs as CSV spreadsheet"
+              >
+                {exportedFormat === 'csv' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Saved CSV</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-3.5 h-3.5 text-sky-400" />
+                    <span>CSV</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                id="btn-footer-export-json"
+                type="button"
+                onClick={() => handleExport('json')}
+                className={`px-3 py-1.5 rounded-[12px] text-xs font-mono font-semibold flex items-center gap-1.5 border transition-all active:scale-95 ${
+                  exportedFormat === 'json'
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 shadow-sm'
+                    : isDark
+                    ? 'bg-[#0d1117] hover:bg-[#21262d] border-[#30363d] text-neutral-200'
+                    : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-800'
+                }`}
+                title="Download historical battery logs as raw JSON data"
+              >
+                {exportedFormat === 'json' ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Saved JSON</span>
+                  </>
+                ) : (
+                  <>
+                    <FileCode className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>JSON</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Close Action */}
           <button
             id="close-details-modal-btn"
             onClick={onClose}
-            className="px-5 py-2.5 rounded-[16px] text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-[16px] text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
           >
             Acknowledge & Close
           </button>

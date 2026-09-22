@@ -236,9 +236,21 @@ class TelemetryLogService {
     }
   }
 
-  public exportAsCsv(): string {
+  public exportAsCsv(extraMetadata?: Record<string, any>): string {
     const logs = this.getLogs();
-    const headers = ['Timestamp', 'ISO Time', 'Level (%)', 'State', 'Temperature (°C)', 'Temp Delta (°C)', 'Voltage (V)', 'Volt Delta (mV)', 'Thermal State', 'Voltage Trend', 'Trigger'];
+    const headers = [
+      'Timestamp_Unix_MS',
+      'ISO_DateTime_UTC',
+      'Battery_Level_Percent',
+      'Charging_State',
+      'Cell_Temperature_Celsius',
+      'Temp_Delta_Celsius',
+      'Cell_Voltage_Volts',
+      'Volt_Delta_Millivolts',
+      'Thermal_Classification',
+      'Voltage_Dynamics',
+      'Telemetry_Trigger_Event'
+    ];
     const rows = logs.map((l) => [
       l.timestamp,
       new Date(l.timestamp).toISOString(),
@@ -256,8 +268,17 @@ class TelemetryLogService {
     return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
   }
 
-  public exportAsJson(): string {
-    return JSON.stringify(this.getLogs(), null, 2);
+  public exportAsJson(extraMetadata?: Record<string, any>): string {
+    const logs = this.getLogs();
+    const exportPayload = {
+      app: 'Rock Battery',
+      version: '1.3.0',
+      exportedAt: new Date().toISOString(),
+      recordCount: logs.length,
+      deviceContext: extraMetadata || {},
+      telemetryRecords: logs,
+    };
+    return JSON.stringify(exportPayload, null, 2);
   }
 }
 

@@ -5,6 +5,10 @@ All notable changes to **Rock Battery** are documented in this file.
 ## [v1.3.0] - 2026-09-22
 
 ### ⚡ Added
+- **Telemetry Export Engine (JSON & CSV)**: Implemented full historical battery telemetry log export in `BatteryDetailsModal`. Allows users to export multi-point thermal, circuit voltage, delta fluctuation, and charge-cycle data into clean comma-delimited CSV spreadsheets or formatted JSON structures for external analytics and battery diagnostics.
+- **Export Toolbar in BatteryDetailsModal**: Dual access points in modal footer and header toolbar with tactile feedback, download feedback badges, and automated ISO timestamp filenames.
+- **24-Hour Battery Capacity Trends (D3 Visualizer)**: New specialized D3 visualization component rendering continuous 24-hour battery capacity trajectories with dual viewing modes (`%` capacity and estimated `mAh` energy), rolling 3-point moving average trendlines, optimal health preservation bands (20%–80%), and touch/pointer scrubbing crosshair with rate-of-change telemetry.
+- **MetricsGrid Telemetry Integration**: Integrated a visual tab selector in `MetricsGrid` switching between 24-Hour Capacity Trends and 24-Hour Activity Drain, with direct interactive navigation from the Design Capacity card.
 - **Intelligent Charging (80% Health Limit)**: Real-time and background monitor alerting when battery reaches 80% state of charge to mitigate electrochemical degradation on lithium-ion cathode cells and preserve long-term battery lifespan.
 - **Toggleable Settings Option**: Dedicated configuration card in Settings with health telemetry rationale, instant test dispatch, and cross-tab DataStore synchronization.
 - **Acoustic Health Preservation Chime**: Custom Web Audio synthesized tri-tone chord (E5 → G#5 → B5) for the 80% Intelligent Charging notification.

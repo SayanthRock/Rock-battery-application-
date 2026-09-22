@@ -44,7 +44,7 @@ export default function App() {
   );
 
   const [activeModal, setActiveModal] = useState<ActiveModal>('none');
-  const [detailsInitialTab, setDetailsInitialTab] = useState<'telemetry' | 'fluctuations'>('telemetry');
+  const [detailsInitialTab, setDetailsInitialTab] = useState<'telemetry' | 'fluctuations' | 'export'>('telemetry');
   const [previewCriticalMode, setPreviewCriticalMode] = useState(false);
 
   // Haptic-enabled refresh action honoring accessibility
@@ -57,7 +57,7 @@ export default function App() {
   };
 
   // Haptic-enabled modal opener honoring accessibility
-  const handleOpenModal = (modal: ActiveModal, initialTab: 'telemetry' | 'fluctuations' = 'telemetry') => {
+  const handleOpenModal = (modal: ActiveModal, initialTab: 'telemetry' | 'fluctuations' | 'export' = 'telemetry') => {
     if (modal !== 'none') {
       triggerHaptic('modal-open', { 
         effectiveReducedMotion, 

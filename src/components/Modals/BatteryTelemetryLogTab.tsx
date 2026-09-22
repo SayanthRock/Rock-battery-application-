@@ -347,27 +347,35 @@ export const BatteryTelemetryLogTab: React.FC<BatteryTelemetryLogTabProps> = ({
           </button>
 
           <button
+            id="btn-tab-export-csv"
             type="button"
             onClick={() => handleExport('csv')}
-            className={`p-1.5 rounded-[10px] border text-[11px] font-mono flex items-center gap-1 transition-all ${
+            className={`p-1.5 px-2.5 rounded-[10px] border text-[11px] font-mono flex items-center gap-1.5 transition-all ${
               isDark ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-neutral-300' : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-700'
             }`}
-            title="Export CSV"
+            title={`Export ${logs.length} telemetry records as CSV`}
           >
             <Download className="w-3 h-3 text-sky-400" />
-            <span className="hidden sm:inline">{copiedExport === 'csv' ? 'Downloaded' : 'CSV'}</span>
+            <span>{copiedExport === 'csv' ? 'Saved CSV' : 'CSV'}</span>
+            <span className="text-[9px] px-1 py-0.2 rounded bg-sky-500/10 text-sky-400 font-mono">
+              {logs.length}
+            </span>
           </button>
 
           <button
+            id="btn-tab-export-json"
             type="button"
             onClick={() => handleExport('json')}
-            className={`p-1.5 rounded-[10px] border text-[11px] font-mono flex items-center gap-1 transition-all ${
+            className={`p-1.5 px-2.5 rounded-[10px] border text-[11px] font-mono flex items-center gap-1.5 transition-all ${
               isDark ? 'bg-[#161b22] hover:bg-[#21262d] border-[#30363d] text-neutral-300' : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-700'
             }`}
-            title="Export JSON"
+            title={`Export ${logs.length} telemetry records as JSON`}
           >
             <Download className="w-3 h-3 text-emerald-400" />
-            <span className="hidden sm:inline">{copiedExport === 'json' ? 'Downloaded' : 'JSON'}</span>
+            <span>{copiedExport === 'json' ? 'Saved JSON' : 'JSON'}</span>
+            <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/10 text-emerald-400 font-mono">
+              {logs.length}
+            </span>
           </button>
         </div>
       </div>
