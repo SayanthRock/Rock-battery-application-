@@ -45,7 +45,8 @@ export default function App() {
     preferences.fullBatteryNotification,
     preferences.lowBatteryThreshold,
     preferences.fullBatteryThreshold,
-    preferences.intelligentCharging
+    preferences.intelligentCharging,
+    preferences.soundAlert
   );
 
   const [activeModal, setActiveModal] = useState<ActiveModal>('none');

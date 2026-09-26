@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { BatteryHardwareMetrics, BatteryStateStatus, RockFlowTier } from '../types';
 import { TelemetryLogger } from '../services/telemetryLog';
+import { playBatteryAlertChime } from '../services/dataStore';
 
 interface WebBatteryManager extends EventTarget {
   charging: boolean;
@@ -35,7 +36,8 @@ export function useBattery(
   notifyOnFull = false,
   lowThreshold = 20,
   fullThreshold = 100,
-  intelligentCharging = true
+  intelligentCharging = true,
+  soundAlert = true
 ) {
   const [metrics, setMetrics] = useState<BatteryHardwareMetrics>({
     level: 100,
@@ -137,34 +139,63 @@ export function useBattery(
       // Ignore
     }
 
+    // Reset low battery alert ref if user recharges or goes above threshold
+    if (charging || level > lowThreshold) {
+      lastNotifiedLowRef.current = null;
+    }
+
     // Reset intelligent notification ref if discharged below 77% or stopped charging
     if (level < 77 || !charging) {
       lastNotifiedIntelligentRef.current = null;
     }
 
-    // Handle optional notification checks with custom thresholds
-    if ('Notification' in window && Notification.permission === 'granted') {
-      if (notifyOnLow && level <= lowThreshold && !charging && lastNotifiedLowRef.current !== level) {
-        lastNotifiedLowRef.current = level;
+    // Reset full battery alert ref if discharged below threshold or unplugged
+    if (!charging || level < fullThreshold) {
+      lastNotifiedFullRef.current = null;
+    }
+
+    // Handle low battery alert: play subtle chime when dropping to or below user-defined threshold, respecting mute
+    if (!charging && level <= lowThreshold && lastNotifiedLowRef.current !== level) {
+      lastNotifiedLowRef.current = level;
+      if (soundAlert) {
+        playBatteryAlertChime('low');
+      }
+      if (notifyOnLow && 'Notification' in window && Notification.permission === 'granted') {
         new Notification(`Rock Battery: Low Battery (${level}%)`, {
           body: `Battery level has dropped to or below your configured alert threshold of ${lowThreshold}%. Connect to power.`,
           icon: '/favicon.ico',
         });
-      } else if (intelligentCharging && level >= 80 && charging && lastNotifiedIntelligentRef.current !== 80) {
-        lastNotifiedIntelligentRef.current = 80;
+      }
+    }
+
+    // Intelligent charging 80% alert
+    if (intelligentCharging && level >= 80 && charging && lastNotifiedIntelligentRef.current !== 80) {
+      lastNotifiedIntelligentRef.current = 80;
+      if (soundAlert) {
+        playBatteryAlertChime('intelligent');
+      }
+      if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(`Rock Battery: Intelligent Charging Limit (80%) 🔋`, {
           body: `Battery reached 80%. Unplugging now significantly reduces electrochemical cell stress and prolongs long-term battery lifespan.`,
           icon: '/favicon.ico',
         });
-      } else if (notifyOnFull && level >= fullThreshold && charging && lastNotifiedFullRef.current !== level) {
-        lastNotifiedFullRef.current = level;
+      }
+    }
+
+    // Full / Target charge alert
+    if (notifyOnFull && level >= fullThreshold && charging && lastNotifiedFullRef.current !== level) {
+      lastNotifiedFullRef.current = level;
+      if (soundAlert) {
+        playBatteryAlertChime('full');
+      }
+      if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(`Rock Battery: Target Charge Reached (${level}%)`, {
           body: `Battery has reached your configured charge threshold of ${fullThreshold}%. You may disconnect power.`,
           icon: '/favicon.ico',
         });
       }
     }
-  }, [notifyOnLow, notifyOnFull, lowThreshold, fullThreshold, intelligentCharging]);
+  }, [notifyOnLow, notifyOnFull, lowThreshold, fullThreshold, intelligentCharging, soundAlert]);
 
   // Initialize and attach listeners
   useEffect(() => {

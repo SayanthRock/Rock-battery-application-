@@ -2,6 +2,17 @@
 
 All notable changes to **Rock Battery** are documented in this file.
 
+## [v1.4.0] - 2026-09-26
+
+### 🚀 GitHub & System Upgrades
+- **Complete GitHub Repository Alignment**: Cleaned build artifacts, resolved deprecation warnings across toolchains, and ensured git remote configuration (`https://github.com/sayanth/rock-battery.git`) is fully synchronized on the `main` branch.
+- **Enhanced GitHub Hub (`GitHubModal`)**:
+  - Direct repository status query with real-time feedback.
+  - Universal PAT push command supporting initial `origin` setup, remote re-targeting, and clean main branch push.
+  - One-click copy for local clone and push commands with tactile haptic feedback.
+- **Vite Configuration Streamlining**: Upgraded path resolution in `vite.config.ts` to `import.meta.dirname` to eliminate upstream Vite deprecation notices.
+- **Production Verification**: Zero TypeScript errors (`tsc --noEmit`), passing build bundle (`vite build`), and clean git tree.
+
 ## [v1.3.0] - 2026-09-22
 
 ### ⚡ Added

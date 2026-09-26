@@ -209,32 +209,39 @@ export function playBatteryAlertChime(type: 'low' | 'full' | 'intelligent' | 'te
         osc.stop(startTime + 0.36);
       });
     } else if (type === 'low') {
-      // Soft amber warning harmonic descending two-tone
+      // Subtle, pleasant dual-bell acoustic chime (C5 gentle chime softly resolving to A4)
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const gain1 = ctx.createGain();
+      const gain2 = ctx.createGain();
 
       osc1.type = 'sine';
-      osc2.type = 'triangle';
+      osc2.type = 'sine';
 
-      osc1.frequency.setValueAtTime(440, now); // A4
-      osc1.frequency.exponentialRampToValueAtTime(330, now + 0.35); // E4
+      // First bell note: C5 (523.25 Hz)
+      osc1.frequency.setValueAtTime(523.25, now);
+      gain1.gain.setValueAtTime(0.0001, now);
+      gain1.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+      gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
 
-      osc2.frequency.setValueAtTime(440, now);
-      osc2.frequency.exponentialRampToValueAtTime(330, now + 0.35);
+      // Second pleasant resolving note: A4 (440.0 Hz) slightly staggered
+      const note2Start = now + 0.12;
+      osc2.frequency.setValueAtTime(440.0, note2Start);
+      gain2.gain.setValueAtTime(0.0001, note2Start);
+      gain2.gain.exponentialRampToValueAtTime(0.10, note2Start + 0.02);
+      gain2.gain.exponentialRampToValueAtTime(0.0001, note2Start + 0.42);
 
-      gain.gain.setValueAtTime(0.001, now);
-      gain.gain.exponentialRampToValueAtTime(0.15, now + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
 
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(ctx.destination);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
 
       osc1.start(now);
-      osc2.start(now);
-      osc1.stop(now + 0.45);
-      osc2.stop(now + 0.45);
+      osc1.stop(now + 0.4);
+
+      osc2.start(note2Start);
+      osc2.stop(note2Start + 0.45);
     } else if (type === 'full') {
       // Upbeat jade crystal ascending harmonic arpeggio
       const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6

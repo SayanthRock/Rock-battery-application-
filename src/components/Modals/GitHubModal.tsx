@@ -86,7 +86,7 @@ export const GitHubModal: React.FC<GitHubModalProps> = ({
   const newRepoUrl = `https://github.com/new?name=${encodeURIComponent(cleanRepo)}&description=${encodeURIComponent('Rock Battery Web Companion & Hardware Telemetry')}`;
   
   const tokenToUse = token.trim() || '<YOUR_GITHUB_TOKEN>';
-  const tokenPushCmd = `git remote set-url origin https://${tokenToUse}@github.com/${cleanUser}/${cleanRepo}.git && git push -u origin main`;
+  const tokenPushCmd = `git remote add origin https://${tokenToUse}@github.com/${cleanUser}/${cleanRepo}.git 2>/dev/null || git remote set-url origin https://${tokenToUse}@github.com/${cleanUser}/${cleanRepo}.git && git branch -M main && git push -u origin main`;
   const cloneCmd = `git clone https://github.com/${cleanUser}/${cleanRepo}.git`;
 
   return (
@@ -354,9 +354,12 @@ export const GitHubModal: React.FC<GitHubModalProps> = ({
 
         {/* Footer */}
         <div className="mt-6 flex items-center justify-between border-t border-neutral-700/20 dark:border-neutral-700/60 pt-4">
-          <span className="text-xs font-mono text-neutral-400">
-            HEAD: <span className="text-emerald-400 font-bold">4194886</span> (clean)
-          </span>
+          <div className="flex items-center gap-2 text-xs font-mono text-neutral-400">
+            <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Branch: <span className="text-emerald-400 font-bold">main</span></span>
+            <span className="text-neutral-600">•</span>
+            <span className="text-neutral-300">v1.4.0</span>
+          </div>
           <button
             id="close-github-modal-btn"
             onClick={onClose}
