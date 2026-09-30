@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.RockBattery" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/rock_black</item>
+        <item name="android:navigationBarColor">@color/rock_black</item>
+        <item name="android:windowBackground">@color/rock_black</item>
+    </style>
+</resources>

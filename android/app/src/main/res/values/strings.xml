@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Rock Battery</string>
+    <string name="app_tagline">Hardware Telemetry &amp; Health Engine</string>
+    <string name="metric_unavailable">Unavailable</string>
+    <string name="status_charging">Charging</string>
+    <string name="status_discharging">Discharging</string>
+    <string name="status_full">Fully Charged</string>
+    <string name="status_unknown">Unknown</string>
+    <string name="intelligent_charging_title">80% Intelligent Cutoff</string>
+</resources>

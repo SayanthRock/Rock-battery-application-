@@ -1,0 +1,8 @@
+<resources>
+    <color name="rock_black">#0d1117</color>
+    <color name="rock_surface">#161b22</color>
+    <color name="rock_surface_variant">#21262d</color>
+    <color name="rock_border">#30363d</color>
+    <color name="rock_emerald">#10b981</color>
+    <color name="rock_emerald_light">#34d399</color>
+</resources>
