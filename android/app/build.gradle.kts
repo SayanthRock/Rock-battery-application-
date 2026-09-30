@@ -22,17 +22,6 @@ android {
         }
     }
 
-    signingConfigs {
-        create("release") {
-            // Falls back to standard debug keystore for automated CI APK generation
-            // unless custom signing properties are supplied via environment variables.
-            storeFile = file(System.getenv("KEYSTORE_FILE") ?: "${System.getProperty("user.home")}/.android/debug.keystore")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "android"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
-        }
-    }
-
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -40,7 +29,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             applicationIdSuffix = ".debug"

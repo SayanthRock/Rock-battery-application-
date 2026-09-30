@@ -46,10 +46,13 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
-          cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK & Licenses
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Determine Release Tag
         id: vars
@@ -71,7 +74,7 @@ jobs:
         working-directory: android
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease || ./gradlew assembleDebug
+          ./gradlew assembleRelease --no-daemon || ./gradlew assembleDebug --no-daemon
           APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
           if [ -n "$APK_PATH" ]; then
             cp "$APK_PATH" "../release-assets/rock-battery-${{ steps.vars.outputs.tag }}.apk"
