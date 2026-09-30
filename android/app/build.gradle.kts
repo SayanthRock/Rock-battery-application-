@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt.android)
 }
 
@@ -58,6 +59,10 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -75,7 +80,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     implementation(libs.hilt.android)
-    annotationProcessor(libs.hilt.compiler)
+    kapt(libs.hilt.compiler)
 
     debugImplementation(libs.androidx.ui.tooling)
 }
