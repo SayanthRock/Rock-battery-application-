@@ -2,6 +2,7 @@
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-emerald.svg)](package.json)
+[![GitHub Release](https://img.shields.io/github/v/release/sayanth/rock-battery?color=10b981&label=GitHub%20Release)](https://github.com/sayanth/rock-battery/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Ready-3178C6.svg)](https://www.typescriptlang.org/)
 [![Zero Telemetry Tracking](https://img.shields.io/badge/Privacy-100%25_Local-00e676.svg)](#privacy--device-access)
 
@@ -68,6 +69,9 @@ The compiled static assets will be output to the `dist/` directory.
 ```bash
 npm run preview
 ```
+
+### GitHub Releases & Distribution
+Official distribution tarballs and zip bundles are published via GitHub Releases. See [RELEASING.md](RELEASING.md) for publishing workflows.
 
 ---
 
