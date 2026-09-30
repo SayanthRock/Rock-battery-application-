@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.sayanthrock.battery"
-    compileSdk = 35
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "com.sayanthrock.battery"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 140
         versionName = "1.4.0"
 
