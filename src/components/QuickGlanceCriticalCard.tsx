@@ -57,6 +57,20 @@ export const QuickGlanceCriticalCard: React.FC<QuickGlanceCriticalCardProps> = (
     return getSystemPowerSavingTips(metrics.level, isDark);
   }, [metrics.level, isDark]);
 
+  // Remaining time estimate - defined unconditionally to satisfy the Rules of Hooks
+  const estimatedTimeDisplay = useMemo(() => {
+    if (metrics.dischargingTime && metrics.dischargingTime < Infinity && metrics.dischargingTime > 0) {
+      const mins = Math.round(metrics.dischargingTime / 60);
+      if (mins < 60) return `~${mins}m remaining`;
+      const hrs = Math.floor(mins / 60);
+      const remMins = mins % 60;
+      return `~${hrs}h ${remMins}m remaining`;
+    }
+    // Approximation for <20% (average ~18-35 mins depending on discharge rate)
+    const approxMins = Math.max(8, Math.round(metrics.level * 1.8));
+    return `~${approxMins}m remaining`;
+  }, [metrics.dischargingTime, metrics.level]);
+
   if (!isCritical) {
     return null;
   }
@@ -91,20 +105,6 @@ export const QuickGlanceCriticalCard: React.FC<QuickGlanceCriticalCardProps> = (
       onEnableDarkTheme();
     }
   };
-
-  // Remaining time estimate
-  const estimatedTimeDisplay = useMemo(() => {
-    if (metrics.dischargingTime && metrics.dischargingTime < Infinity && metrics.dischargingTime > 0) {
-      const mins = Math.round(metrics.dischargingTime / 60);
-      if (mins < 60) return `~${mins}m remaining`;
-      const hrs = Math.floor(mins / 60);
-      const remMins = mins % 60;
-      return `~${hrs}h ${remMins}m remaining`;
-    }
-    // Approximation for <20% (average ~18-35 mins depending on discharge rate)
-    const approxMins = Math.max(8, Math.round(metrics.level * 1.8));
-    return `~${approxMins}m remaining`;
-  }, [metrics.dischargingTime, metrics.level]);
 
   // Collapsed minimal pill state
   if (isCollapsed) {

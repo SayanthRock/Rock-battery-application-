@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Moon, Sun, Monitor, ShieldCheck, BatteryCharging, Github } from 'lucide-react';
+import { RefreshCw, Moon, Sun, Monitor, ShieldCheck, BatteryCharging } from 'lucide-react';
 import { ThemeMode } from '../types';
 
 interface HeaderProps {
@@ -15,7 +15,6 @@ interface HeaderProps {
   isRefreshing: boolean;
   isApiSupported: boolean;
   charging: boolean;
-  onOpenGitHubModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -26,7 +25,6 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing,
   isApiSupported,
   charging,
-  onOpenGitHubModal,
 }) => {
   const [time, setTime] = useState<string>('');
 
@@ -64,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
               Rock Battery
             </h1>
             <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-              v1.3.0
+              v1.4.0
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-neutral-400">
@@ -88,22 +86,6 @@ export const Header: React.FC<HeaderProps> = ({
           <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
           <span>{time || '--:--'}</span>
         </div>
-
-        {/* GitHub repository link / modal trigger */}
-        <button
-          id="header-github-btn"
-          type="button"
-          onClick={onOpenGitHubModal}
-          title="GitHub Repository & Sync Hub"
-          aria-label="Open GitHub Repository & Sync Hub"
-          className={`w-9 h-9 rounded-[14px] flex items-center justify-center transition-all active:scale-95 ${
-            isDark 
-              ? 'bg-[#161b22] hover:bg-[#21262d] border border-[#30363d]/80 text-neutral-300 hover:text-emerald-400' 
-              : 'bg-white hover:bg-neutral-100 border border-neutral-200 text-neutral-700 hover:text-emerald-600 shadow-sm'
-          }`}
-        >
-          <Github className="w-4 h-4" />
-        </button>
 
         {/* Theme quick toggle */}
         <button

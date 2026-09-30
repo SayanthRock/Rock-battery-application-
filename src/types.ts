@@ -54,4 +54,4 @@ export interface AppPreferences {
   lowPowerMode: boolean; // energy-saving mode reducing polling cadence & styling UI
 }
 
-export type ActiveModal = 'none' | 'details' | 'usage' | 'charging' | 'settings' | 'github';
+export type ActiveModal = 'none' | 'details' | 'usage' | 'charging' | 'settings';

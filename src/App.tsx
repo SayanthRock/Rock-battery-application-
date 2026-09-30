@@ -17,7 +17,6 @@ import { BatteryDetailsModal } from './components/Modals/BatteryDetailsModal';
 import { BatteryUsageModal } from './components/Modals/BatteryUsageModal';
 import { ChargingInfoModal } from './components/Modals/ChargingInfoModal';
 import { SettingsModal } from './components/Modals/SettingsModal';
-import { GitHubModal } from './components/Modals/GitHubModal';
 import { ActiveModal, ThemeMode } from './types';
 import { Wifi, Signal, BatteryMedium } from 'lucide-react';
 import { triggerHaptic } from './services/haptics';
@@ -140,7 +139,6 @@ export default function App() {
             isRefreshing={isRefreshing}
             isApiSupported={metrics.apiSupported}
             charging={metrics.charging}
-            onOpenGitHubModal={() => handleOpenModal('github')}
           />
         </div>
 
@@ -292,14 +290,6 @@ export default function App() {
           onClose={handleCloseModal}
           onTogglePreviewCritical={() => setPreviewCriticalMode(!previewCriticalMode)}
           isPreviewCritical={previewCriticalMode}
-        />
-      )}
-
-      {activeModal === 'github' && (
-        <GitHubModal
-          isDark={isDark}
-          onClose={handleCloseModal}
-          hapticEnabled={preferences.hapticFeedback}
         />
       )}
     </div>
