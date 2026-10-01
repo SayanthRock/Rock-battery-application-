@@ -15,7 +15,9 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
-    private val viewModel: BatteryViewModel by viewModels()
+    private val viewModel: BatteryViewModel by viewModels {
+        BatteryViewModel.provideFactory(applicationContext)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -1,6 +1,8 @@
 package com.sayanthrock.battery.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sayanthrock.battery.data.model.BatteryState
 import com.sayanthrock.battery.data.preferences.UserPreferences
@@ -59,6 +61,18 @@ class BatteryViewModel @Inject constructor(
     fun toggleLowPower(enabled: Boolean) {
         viewModelScope.launch {
             preferencesRepository.setLowPowerOptimization(enabled)
+        }
+    }
+
+    companion object {
+        fun provideFactory(context: Context): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                val appContext = context.applicationContext
+                val batteryRepo = BatteryRepository(appContext)
+                val prefsRepo = UserPreferencesRepository(appContext)
+                return BatteryViewModel(batteryRepo, prefsRepo) as T
+            }
         }
     }
 }
