@@ -5,6 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-web:
@@ -47,10 +48,13 @@ jobs:
 
       - name: Setup Android SDK Environment
         run: |
-          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
-          mkdir -p "$ANDROID_HOME/licenses" || true
-          printf "\n24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n84831b9409646a3e8e447b7a822e8884d9620857" > "$ANDROID_HOME/licenses/android-sdk-license" 2>/dev/null || true
-          printf "\n893fb8b79d0e59c2452973695878ff59d750d089" > "$ANDROID_HOME/licenses/android-sdk-preview-license" 2>/dev/null || true
+          SDK_PATH="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "sdk.dir=$SDK_PATH" > android/local.properties
+          sudo chown -R $USER:$USER "$SDK_PATH" || true
+          mkdir -p "$SDK_PATH/licenses" || true
+          printf "\n24333f8a63b6825ea9c5514f83c2829b004d1fee\nd56f5187479451eabf01fb78af6dfcb131a6481e\n84831b9409646a3e8e447b7a822e8884d9620857" > "$SDK_PATH/licenses/android-sdk-license" 2>/dev/null || true
+          printf "\n893fb8b79d0e59c2452973695878ff59d750d089" > "$SDK_PATH/licenses/android-sdk-preview-license" 2>/dev/null || true
+          yes | $SDK_PATH/cmdline-tools/latest/bin/sdkmanager --licenses 2>/dev/null || true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -60,3 +64,11 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload Debug APK Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rock-battery-debug-apk
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
