@@ -60,11 +60,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           build-root-directory: android
-          cache-disabled: false
 
       - name: Build Android Debug APK
         working-directory: android
         run: |
+          sed -i 's/\r$//' gradlew
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon --stacktrace
 

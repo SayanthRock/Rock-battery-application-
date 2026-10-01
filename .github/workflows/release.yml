@@ -61,7 +61,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           build-root-directory: android
-          cache-disabled: false
 
       - name: Determine Release Tag
         id: vars
@@ -82,6 +81,7 @@ jobs:
       - name: Build Android Release APK
         working-directory: android
         run: |
+          sed -i 's/\r$//' gradlew
           chmod +x gradlew
           ./gradlew assembleRelease --no-daemon --stacktrace || ./gradlew assembleDebug --no-daemon --stacktrace
           APK_PATH=$(find app/build/outputs/apk -name "*.apk" | head -n 1)

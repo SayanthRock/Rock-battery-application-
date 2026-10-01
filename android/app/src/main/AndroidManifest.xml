@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:name=".RockBatteryApp"
+        android:name="com.sayanthrock.battery.RockBatteryApp"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
@@ -14,7 +14,7 @@
         android:theme="@style/Theme.RockBattery">
         
         <activity
-            android:name=".MainActivity"
+            android:name="com.sayanthrock.battery.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.RockBattery">
