@@ -38,7 +38,7 @@ class BatteryRepository @Inject constructor(
         awaitClose {
             try {
                 context.unregisterReceiver(receiver)
-            } catch (_: Exception) {
+            } catch (e: Exception) {
             }
         }
     }
